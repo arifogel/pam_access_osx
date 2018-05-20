@@ -14,11 +14,6 @@ pam_access_osx_la_LDFLAGS = $(AM_LDFLAGS) -avoid-version -export-dynamic -module
 pam_access_osx_la_LIBADD = -lpam
 pam_access_osx_la_SOURCES = $(MODULE_SRC)
 
-check_LTLIBRARIES = libpam_access_osx_test.la
-
-libpam_access_osx_test_la_SOURCES = $(MODULE_SRC)
-libpam_access_osx_test_la_LDFLAGS = $(AM_LDFLAGS) -avoid-version -rpath $(abs_top_builddir)
-
 ### Tests
 TEST_NAMES = \
 	test_access_exports \
@@ -28,7 +23,7 @@ TESTS = $(TEST_NAMES)
 
 check_PROGRAMS = $(TEST_NAMES)
 
-TEST_LIB = $(top_srcdir)/libpam_access_osx_test.la
+TEST_LDFLAGS = -lpam
 
 ### Exports test
 test_access_exports_CPPFLAGS = -I$(top_srcdir)/src
@@ -38,10 +33,10 @@ test_access_exports_SOURCES = tests/test_access_exports.c
 
 # Test template
 #test_access_<CHANGEME>_CPPFLAGS = -I$(top_srcdir)/src
-#test_access_<CHANGEME>_LDADD = $(TEST_LIB)
-#test_access_<CHANGEME>_SOURCES = tests/test_access_<CHANGEME>.c
+#test_access_<CHANGEME>_LDADD = $(TEST_LDFLAGS)
+#test_access_<CHANGEME>_SOURCES = tests/test_access_<CHANGEME>.c $(MODULE_SRC)
 
 test_access_parser_CPPFLAGS = -I$(top_srcdir)/src
-test_access_parser_LDADD = $(TEST_LIB)
-test_access_parser_SOURCES = tests/test_access_parser.c
+test_access_parser_LDADD = $(TEST_LDFLAGS)
+test_access_parser_SOURCES = tests/test_access_parser.c $(MODULE_SRC)
 
