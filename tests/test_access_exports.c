@@ -9,7 +9,7 @@ void* pam_access_osx;
 
 int main(void) {
   // Load module
-  pam_access_osx = dlopen("../pam_access_osx/.libs/pam_access_osx.so", RTLD_NOW | RTLD_GLOBAL | RTLD_FIRST);
+  pam_access_osx = dlopen(".libs/pam_access_osx.so", RTLD_NOW | RTLD_GLOBAL | RTLD_FIRST);
   if (pam_access_osx == NULL) {
     fprintf(stderr, "Could not open pam_access_osx module: %s", dlerror());
     exit(1);
