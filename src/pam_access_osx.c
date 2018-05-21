@@ -8,8 +8,13 @@
 #include <sys/errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <syslog.h>
 #include <unistd.h>
+
+#ifndef PAM_ACCESS_OSX_TEST
+#include <syslog.h>
+#else
+#include <stdio.h>
+#endif
 
 #include "pam_access_osx.h"
 
@@ -45,9 +50,13 @@ pam_access_osx_syslog(
   }
   va_list args;
   va_start(args, format);
+#ifndef PAM_ACCESS_OSX_TEST
   openlog(PAM_ACCESS_OSX_IDENT, 0, LOG_AUTH);
   vsyslog(priority, format, args);
   closelog();
+#else
+  vfprintf(stderr, format, args);
+#endif
 }
 
 PAM_EXTERN
