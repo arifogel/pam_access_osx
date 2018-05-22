@@ -24,6 +24,11 @@ clean_state(parser_state_t* state) {
 }
 
 bool
+digit(char ch) {
+  return '0' <= ch && ch <= '9';
+}
+
+bool
 expect_action(parser_state_t* state) {
   pam_access_osx_syslog(LOG_DEBUG, "Entered expect_action\n");
   if (!next_char(state)) {
@@ -34,6 +39,56 @@ expect_action(parser_state_t* state) {
     return false;
   }
   return true;
+}
+
+bool
+expect_colon(parser_state_t* state) {
+  pam_access_osx_syslog(LOG_DEBUG, "Entered expect_colon\n");
+  if (!next_char(state)) {
+    return false;
+  }
+  if (state->last != ':') {
+    parse_error(state, "Expected ':'\n");
+    return false;
+  }
+  return true;;
+}
+
+bool
+expect_host_specifier(parser_state_t* state) {
+  pam_access_osx_syslog(LOG_DEBUG, "Entered expect_host_specifier\n");
+  if (!next_char(state)) {
+    return false;
+  }
+  if (!host_char(state->last)) {
+    parse_error(state, "Expected host-specifier\n");
+    return false;
+  }
+  while (!state->eof && host_char(peek_char(state))) {
+    next_char(state);
+  }
+  return true;
+}
+
+bool
+expect_user(parser_state_t* state) {
+  pam_access_osx_syslog(LOG_DEBUG, "Entered expect_user\n");
+  if (!next_char(state)) {
+    return false;
+  }
+  if (!user_char(state->last)) {
+    parse_error(state, "Expected user\n");
+    return false;
+  }
+  while (!state->eof && user_char(peek_char(state))) {
+    next_char(state);
+  }
+  return true;
+}
+
+bool
+host_char(char ch) {
+  return ch != '\n' && ch != '#' && ch != ' ' && ch != '\t';
 }
 
 void
@@ -47,6 +102,11 @@ init_state(parser_state_t* state) {
   state->line = 1;
   state->pos = 0;
   state->start = NULL;
+}
+
+bool
+lower(char ch) {
+  return 'a' <= ch && ch <= 'z';
 }
 
 bool
@@ -65,7 +125,20 @@ next_char(parser_state_t* state) {
     state->last = state->buf[state->pos++];
     update_eof(state);
   }
-  pam_access_osx_syslog(LOG_DEBUG, "%d:%d: Consumed '%c'\n", state->line, state->col, state->last);
+  char chstr[3] = {0};
+  switch(state->last) {
+    case '\n':
+      chstr[0] = '\\';
+      chstr[1] = 'n';
+      break;
+    case '\t':
+      chstr[0] = '\\';
+      chstr[1] = 't';
+      break;
+    default:
+      chstr[0] = state->last;
+  }
+  pam_access_osx_syslog(LOG_DEBUG, "%d:%d: Consumed '%s'\n", state->line, state->col, chstr);
   return true;
 }
 
@@ -102,6 +175,18 @@ skip_comment(parser_state_t* state) {
 }
 
 bool
+skip_host_specifier(parser_state_t* state) {
+  pam_access_osx_syslog(LOG_DEBUG, "Entered skip_host_specifier\n");
+  bool consumed = false;
+  while (!state->eof && host_char(peek_char(state))) {
+    next_char(state);
+    consumed = true;
+  }
+  return consumed;
+
+}
+
+bool
 skip_newline(parser_state_t* state) {
   pam_access_osx_syslog(LOG_DEBUG, "Entered skip_newline\n");
   bool consumed = false;
@@ -129,6 +214,16 @@ update_eof(parser_state_t* state) {
   if (state->pos >= state->len) {
     state->eof = true;
   }
+}
+
+bool
+upper(char ch) {
+  return 'A' <= ch && ch <= 'Z';
+}
+
+bool
+user_char(char ch) {
+  return ch != '\n' && ch != ':' && ch != '#' && ch != ' ' && ch != '\t';
 }
 
 bool
@@ -180,22 +275,40 @@ bool
 validate_line(parser_state_t* state) {
   pam_access_osx_syslog(LOG_DEBUG, "Entered validate_line\n");
   skip_whitespace(state);
+  // Action
   if (!expect_action(state)) {
     return false;
   }
   skip_whitespace(state);
-  skip_colon(state);
+  // :
+  if (!expect_colon(state)) {
+    return false;
+  }
   skip_whitespace(state);
+  // User
   if (!expect_user(state)) {
     return false;
   }
   skip_whitespace(state);
-  skip_colon(state);
+  // :
+  if (!expect_colon(state)) {
+    return false;
+  }
   skip_whitespace(state);
-  expect_host_specifier(state);
+  // HS1
+  if (!expect_host_specifier(state)) {
+    return false;
+  }
+  // HS2-
   while (skip_whitespace(state) || skip_host_specifier(state)) {}
+  // #.*\n
   while (skip_comment(state) || skip_newline(state) || skip_whitespace(state)) {}
   return true;
+}
+
+bool
+word_char(char ch) {
+  return ch != '\n' && ch != ' ' && ch != '\t' && ch != '#';
 }
 
 bool

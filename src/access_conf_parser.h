@@ -28,6 +28,15 @@ expect_action(
   parser_state_t* state);
 
 /**
+ * Consume a colon (':') character.
+ * Sets state->err if at EOF or error occurs.
+ * Returns true iff successful.
+ */
+bool
+expect_colon(
+  parser_state_t* state);
+
+/**
  * Consume a host specifier:
  * - IPv4 address
  * - IPv4 network
@@ -50,6 +59,13 @@ expect_host_specifier(
 bool
 expect_user(
   parser_state_t* state);
+
+/**
+ * Returns true iff ch is a valid char in a host-specifier.
+ */
+bool
+host_char(
+  char ch);
 
 /**
  * Set initial values for parser state.
@@ -82,14 +98,6 @@ parse_error(
  */
 char
 peek_char(
-  parser_state_t* state);
-
-/**
- * Consume a colon ':' character if available.
- * Returns true iff colon consumed.
- */
-bool
-skip_colon(
   parser_state_t* state);
 
 /**
@@ -136,6 +144,13 @@ skip_whitespace(
  */
 void
 update_eof(parser_state_t* state); 
+
+/**
+ * Returns true iff ch is a valid char in a username.
+ */
+bool
+user_char(
+  char ch);
 
 /**
  * Validate the format of the access.conf file located at supplied path.
