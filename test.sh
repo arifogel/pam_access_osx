@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-./configure CFLAGS='-Wall -Wextra -Werror -Wno-unused-parameter -O0 -g'
+./configure CFLAGS='-Wall -Wextra -Werror -Wno-unused-parameter -O0 -g' --enable-log-level=LOG_DEBUG
 make clean
 make
 if ! make check; then

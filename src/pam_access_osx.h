@@ -2,6 +2,8 @@
 #define __PAM_ACCESS_OSX_H__
 
 #include <security/pam_appl.h>
+#include <stdarg.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -62,4 +64,14 @@ pam_access_osx_syslog(
   const char* format,
   ...);
 
+/**
+ * Write format string to syslog facility LOG_AUTH with specified priority.
+ */
+void
+pam_access_osx_vsyslog(
+  int priority,
+  const char* format,
+  va_list args);
+
 #endif /*__PAM_ACCESS_OSX_H__*/
+

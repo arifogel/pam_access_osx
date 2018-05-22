@@ -9,11 +9,11 @@
 #define TEST_BAD_ACCESS_CONF ("tests/resources/etc/bad-access.conf")
 
 int main(void) {
-  if (validate(TEST_ACCESS_CONF)) {
+  if (!validate(TEST_ACCESS_CONF)) {
     fprintf(stderr, "Failed to validate: '%s'\n", TEST_ACCESS_CONF);
     exit(1);
   }
-  if (!validate(TEST_BAD_ACCESS_CONF)) {
+  if (validate(TEST_BAD_ACCESS_CONF)) {
     fprintf(stderr, "Improperly validated: '%s'\n", TEST_BAD_ACCESS_CONF);
     exit(1);
   }

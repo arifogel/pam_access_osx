@@ -55,7 +55,27 @@ pam_access_osx_syslog(
   vsyslog(priority, format, args);
   closelog();
 #else
-  FILE* output_stream = priority < LOG_NOTICE ? stderr : stdout;
+  //FILE* output_stream = priority < LOG_NOTICE ? stderr : stdout;
+  FILE* output_stream = stderr;
+  vfprintf(output_stream, format, args);
+#endif
+}
+
+void
+pam_access_osx_vsyslog(
+  int priority,
+  const char* format,
+  va_list args) {
+  if (priority > PAM_ACCESS_OSX_LOG_LEVEL) {
+    return;
+  }
+#ifndef PAM_ACCESS_OSX_TEST
+  openlog(PAM_ACCESS_OSX_IDENT, 0, LOG_AUTH);
+  vsyslog(priority, format, args);
+  closelog();
+#else
+  FILE* output_stream = stderr;
+  //FILE* output_stream = priority < LOG_NOTICE ? stderr : stdout;
   vfprintf(output_stream, format, args);
 #endif
 }
