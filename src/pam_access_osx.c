@@ -55,7 +55,8 @@ pam_access_osx_syslog(
   vsyslog(priority, format, args);
   closelog();
 #else
-  vfprintf(stderr, format, args);
+  FILE* output_stream = priority < LOG_NOTICE ? stderr : stdout;
+  vfprintf(output_stream, format, args);
 #endif
 }
 

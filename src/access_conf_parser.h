@@ -7,7 +7,16 @@
  */
 int
 validate(
-    const char* path
+  const char* path
+);
+
+/**
+ * Validate the format of the access.conf represented as input_file..
+ * Returns 0 if successful, non-zero value otherwise.
+ */
+int
+validate_file(
+  FILE* input_file
 );
 
 #endif /* __ACCESS_CONF_PARSER_H__ */

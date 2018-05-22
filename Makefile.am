@@ -23,6 +23,7 @@ TESTS = $(TEST_NAMES)
 
 check_PROGRAMS = $(TEST_NAMES)
 
+TEST_CFLAGS = $(AM_CFLAGS) -DPAM_ACCESS_OSX_TEST
 TEST_LDFLAGS = -lpam
 
 ### Exports test
@@ -36,6 +37,7 @@ test_access_exports_SOURCES = tests/test_access_exports.c
 #test_access_<CHANGEME>_LDADD = $(TEST_LDFLAGS)
 #test_access_<CHANGEME>_SOURCES = tests/test_access_<CHANGEME>.c $(MODULE_SRC)
 
+test_access_parser_CFLAGS = $(TEST_CFLAGS)
 test_access_parser_CPPFLAGS = -I$(top_srcdir)/src
 test_access_parser_LDADD = $(TEST_LDFLAGS)
 test_access_parser_SOURCES = tests/test_access_parser.c $(MODULE_SRC)
