@@ -17,7 +17,9 @@ pam_access_osx_la_SOURCES = $(MODULE_SRC)
 ### Tests
 TEST_NAMES = \
 	test_access_exports \
-	test_access_parser
+	test_access_conf_parser_parse \
+	test_access_conf_parser_validate_invalid \
+	test_access_conf_parser_validate_valid
 
 TESTS = $(TEST_NAMES)
 
@@ -37,8 +39,18 @@ test_access_exports_SOURCES = tests/test_access_exports.c
 #test_access_<CHANGEME>_LDADD = $(TEST_LDFLAGS)
 #test_access_<CHANGEME>_SOURCES = tests/test_access_<CHANGEME>.c $(MODULE_SRC)
 
-test_access_parser_CFLAGS = $(TEST_CFLAGS)
-test_access_parser_CPPFLAGS = -I$(top_srcdir)/src
-test_access_parser_LDADD = $(TEST_LDFLAGS)
-test_access_parser_SOURCES = tests/test_access_parser.c $(MODULE_SRC)
+test_access_conf_parser_parse_CFLAGS = $(TEST_CFLAGS)
+test_access_conf_parser_parse_CPPFLAGS = -I$(top_srcdir)/src
+test_access_conf_parser_parse_LDADD = $(TEST_LDFLAGS)
+test_access_conf_parser_parse_SOURCES = tests/test_access_conf_parser_parse.c $(MODULE_SRC)
+
+test_access_conf_parser_validate_invalid_CFLAGS = $(TEST_CFLAGS)
+test_access_conf_parser_validate_invalid_CPPFLAGS = -I$(top_srcdir)/src
+test_access_conf_parser_validate_invalid_LDADD = $(TEST_LDFLAGS)
+test_access_conf_parser_validate_invalid_SOURCES = tests/test_access_conf_parser_validate_invalid.c $(MODULE_SRC)
+
+test_access_conf_parser_validate_valid_CFLAGS = $(TEST_CFLAGS)
+test_access_conf_parser_validate_valid_CPPFLAGS = -I$(top_srcdir)/src
+test_access_conf_parser_validate_valid_LDADD = $(TEST_LDFLAGS)
+test_access_conf_parser_validate_valid_SOURCES = tests/test_access_conf_parser_validate_valid.c $(MODULE_SRC)
 
