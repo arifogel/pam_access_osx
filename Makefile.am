@@ -1,4 +1,4 @@
-AUTOMAKE_OPTIONS = subdir-objects
+AUTOMAKE_OPTIONS = subdir-objects serial-tests
 ACLOCAL_AMFLAGS=-I m4
 
 ### Module and test library
@@ -7,8 +7,10 @@ pam_access_osxdir = $(libdir)/security
 
 pam_access_osx_LTLIBRARIES = pam_access_osx.la
 
-MODULE_SRC = src/pam_access_osx.h src/pam_access_osx.c \
-						 src/access_conf_parser.h src/access_conf_parser.c
+MODULE_SRC = \
+   src/pam_access_osx.h src/pam_access_osx.c \
+	 src/access_conf_parser.h src/access_conf_parser.c \
+	 src/access_conf.h
 
 pam_access_osx_la_LDFLAGS = $(AM_LDFLAGS) -avoid-version -export-dynamic -module -shared -export-symbols-regex "pam_sm_authenticate"
 pam_access_osx_la_LIBADD = -lpam
@@ -17,9 +19,9 @@ pam_access_osx_la_SOURCES = $(MODULE_SRC)
 ### Tests
 TEST_NAMES = \
 	test_access_exports \
-	test_access_conf_parser_parse \
 	test_access_conf_parser_validate_invalid \
-	test_access_conf_parser_validate_valid
+	test_access_conf_parser_validate_valid \
+	test_access_conf_parser_parse
 
 TESTS = $(TEST_NAMES)
 

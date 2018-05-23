@@ -20,6 +20,8 @@
 #define PAM_ACCESS_OSX_ENV_USER ("PAM_ACCESS_OSX_USER")
 #define PAM_ACCESS_OSX_ENV_RHOST ("PAM_ACCESS_OSX_RHOST")
 
+extern int pam_access_osx_log_level;
+
 /**
  * Child process entry point in which command specified by argc and argv executes. This command is responsible
  * for authenticating, and runs in an environment in which variables PAM_ACCESS_OSX_USER and PAM_ACCESS_OSX_RHOST are

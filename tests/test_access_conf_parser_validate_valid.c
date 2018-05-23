@@ -8,7 +8,8 @@
 #define TEST_ACCESS_CONF ("tests/resources/etc/access.conf")
 
 int main(void) {
-  if (!validate(TEST_ACCESS_CONF)) {
+  pam_access_osx_log_level = LOG_INFO;
+  if (!validate_file(TEST_ACCESS_CONF)) {
     fprintf(stderr, "Failed to validate: '%s'\n", TEST_ACCESS_CONF);
     exit(1);
   }

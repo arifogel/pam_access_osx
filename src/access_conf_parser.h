@@ -1,15 +1,25 @@
 #ifndef __ACCESS_CONF_PARSER_H__
 #define __ACCESS_CONF_PARSER_H__
 
+#include <stdbool.h>
+
+#include "access_conf.h"
+
 #define PARSER_ERROR (-1)
 #define PARSER_SUCCESS (0)
+
+extern size_t pam_exec_osx_allocated_entry_count;
+
+extern size_t pam_exec_osx_allocated_hspec_count;
 
 typedef struct parser_state {
   const char* buf;
   off_t col;
+  access_conf_entry_t* cur_entry;
   bool err;
   bool eof;
   int fd;
+  access_conf_entry_t* first_entry;
   char last;
   off_t len;
   off_t line;
@@ -17,6 +27,14 @@ typedef struct parser_state {
   off_t pos;
   void* start;
 } parser_state_t;
+
+void
+destroy_entry(
+  access_conf_entry_t* entry);
+
+void
+destroy_hspec(
+  access_conf_host_specifier_t* hspec);
 
 /**
  * Consume an action, represented as either '+' or '-' (unquoted).
@@ -67,6 +85,11 @@ bool
 host_char(
   char ch);
 
+bool
+init_file(
+  const char* path,
+  parser_state_t* state);
+
 /**
  * Set initial values for parser state.
  */
@@ -83,6 +106,14 @@ bool
 next_char(
   parser_state_t* state);
 
+access_conf_entry_t*
+parse(
+  parser_state_t* state);
+
+bool
+parse_action(
+  parser_state_t* state, access_conf_entry_t* entry);
+
 /**
  * Print parse error to error log, prefixed by current line and column.
  */
@@ -91,6 +122,14 @@ parse_error(
   parser_state_t* state,
   const char* format,
   ...);
+
+access_conf_entry_t*
+parse_file(
+  const char* path);
+
+bool
+parse_line(
+  parser_state_t* state);
 
 /**
  * Writes the next char in the stream to nc without advancing the stream.
@@ -143,7 +182,8 @@ skip_whitespace(
  * Set state->eof if all characters have been consumed
  */
 void
-update_eof(parser_state_t* state); 
+update_eof(
+  parser_state_t* state);
 
 /**
  * Returns true iff ch is a valid char in a username.
@@ -153,22 +193,20 @@ user_char(
   char ch);
 
 /**
- * Validate the format of the access.conf file located at supplied path.
- * Returns true iff successful.
- */
-bool
-validate(
-  const char* path
-);
-
-/**
  * Validate the format of the access.conf represented as state..
  * Returns true iff successful.
  */
 bool
+validate(
+  parser_state_t* state);
+
+/**
+ * Validate the format of the access.conf file located at supplied path.
+ * Returns true iff successful.
+ */
+bool
 validate_file(
-  parser_state_t* state
-);
+  const char* path);
 
 /**
  * Validate the format of the next line in the access.conf file
@@ -176,8 +214,7 @@ validate_file(
  */
 bool
 validate_line(
-  parser_state_t* state
-);
+  parser_state_t* state);
 
 /**
  * Returns true iff ch is a whitespace character (' ' or '\t')

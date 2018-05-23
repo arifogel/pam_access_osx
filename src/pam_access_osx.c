@@ -18,6 +18,8 @@
 
 #include "pam_access_osx.h"
 
+int pam_access_osx_log_level = PAM_ACCESS_OSX_LOG_LEVEL;
+
 int
 pam_access_osx_init_pam_info(
   pam_handle_t* pamh,
@@ -45,7 +47,7 @@ pam_access_osx_syslog(
   int priority,
   const char* format,
   ...) {
-  if (priority > PAM_ACCESS_OSX_LOG_LEVEL) {
+  if (priority > pam_access_osx_log_level) {
     return;
   }
   va_list args;
@@ -66,7 +68,7 @@ pam_access_osx_vsyslog(
   int priority,
   const char* format,
   va_list args) {
-  if (priority > PAM_ACCESS_OSX_LOG_LEVEL) {
+  if (priority > pam_access_osx_log_level) {
     return;
   }
 #ifndef PAM_ACCESS_OSX_TEST
