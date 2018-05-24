@@ -5,6 +5,8 @@
 
 #include "access_conf.h"
 
+#define ADDR_STR_MAX_LEN (16)
+
 #define PARSER_ERROR (-1)
 #define PARSER_SUCCESS (0)
 
@@ -15,6 +17,18 @@ extern size_t pam_exec_osx_allocated_hostname_count;
 extern size_t pam_exec_osx_allocated_hspec_count;
 
 extern size_t pam_exec_osx_allocated_uspec_count;
+
+extern size_t pam_exec_osx_hspec_all_count;
+
+extern size_t pam_exec_osx_hspec_hostname_count;
+
+extern size_t pam_exec_osx_hspec_ipv4_address_count;
+
+extern size_t pam_exec_osx_hspec_ipv4_network_count;
+
+extern size_t pam_exec_osx_hspec_ipv6_address_count;
+
+extern size_t pam_exec_osx_hspec_ipv6_network_count;
 
 typedef struct parser_state {
   const char* buf;
@@ -198,6 +212,11 @@ skip_newline(
 bool
 skip_whitespace(
   parser_state_t* state);
+
+bool
+specialize_hspec(
+  const char* hostname,
+  access_conf_host_specifier_t* hspec);
 
 /**
  * Set state->eof if all characters have been consumed

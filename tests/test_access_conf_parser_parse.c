@@ -17,10 +17,18 @@ int main(void) {
   assert(first_entry != NULL);
 
   // Should have allocated corresponding # of entry, hostname, hspec, uspec
-  assert(pam_exec_osx_allocated_entry_count == 5);
-  assert(pam_exec_osx_allocated_hostname_count == 6);
-  assert(pam_exec_osx_allocated_hspec_count == 6);
-  assert(pam_exec_osx_allocated_uspec_count == 5);
+  assert(pam_exec_osx_allocated_entry_count == 7);
+  assert(pam_exec_osx_allocated_hostname_count == 8);
+  assert(pam_exec_osx_allocated_hspec_count == 8);
+  assert(pam_exec_osx_allocated_uspec_count == 7);
+
+  // Should have corresponding counts for hspec types
+  assert(pam_exec_osx_hspec_all_count == 1);
+  assert(pam_exec_osx_hspec_ipv4_address_count == 1);
+  assert(pam_exec_osx_hspec_ipv4_network_count == 3);
+  assert(pam_exec_osx_hspec_ipv6_address_count == 1);
+  assert(pam_exec_osx_hspec_ipv6_network_count == 1);
+  assert(pam_exec_osx_hspec_hostname_count == 1);
 
   destroy_entry(first_entry);
 

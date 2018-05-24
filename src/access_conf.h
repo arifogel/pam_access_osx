@@ -4,6 +4,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef enum host_specifier_type {
+  HST_ALL=1,
+  HST_HOSTNAME,
+  HST_IPV4_ADDRESS,
+  HST_IPV4_NETWORK
+} host_specifier_type_t;
+
 typedef struct access_conf_host_specifier {
   char* hostname;
   uint8_t ipv4_len;
@@ -11,6 +18,7 @@ typedef struct access_conf_host_specifier {
   uint8_t ipv6_len;
   uint8_t ipv6_network[128];
   struct access_conf_host_specifier* next;
+  host_specifier_type_t type;
 } access_conf_host_specifier_t;
 
 typedef struct access_conf_entry {
