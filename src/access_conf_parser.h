@@ -214,7 +214,38 @@ skip_whitespace(
   parser_state_t* state);
 
 bool
+sp_all(
+  parser_state_t* state,
+  const char* hostname,
+  access_conf_host_specifier_t* hspec);
+
+bool
+sp_ipv4_address(
+  parser_state_t* state,
+  const char* hostname,
+  access_conf_host_specifier_t* hspec);
+
+bool
+sp_ipv4_network(
+  parser_state_t* state,
+  const char* hostname,
+  access_conf_host_specifier_t* hspec);
+
+bool
+sp_ipv6_address(
+  parser_state_t* state,
+  const char* hostname,
+  access_conf_host_specifier_t* hspec);
+
+bool
+sp_ipv6_network(
+  parser_state_t* state,
+  const char* hostname,
+  access_conf_host_specifier_t* hspec);
+
+bool
 specialize_hspec(
+  parser_state_t* state,
   const char* hostname,
   access_conf_host_specifier_t* hspec);
 
