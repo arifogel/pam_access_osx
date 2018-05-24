@@ -10,17 +10,22 @@
 
 extern size_t pam_exec_osx_allocated_entry_count;
 
+extern size_t pam_exec_osx_allocated_hostname_count;
+
 extern size_t pam_exec_osx_allocated_hspec_count;
+
+extern size_t pam_exec_osx_allocated_uspec_count;
 
 typedef struct parser_state {
   const char* buf;
   off_t col;
-  access_conf_entry_t* cur_entry;
-  bool err;
   bool eof;
+  bool err;
   int fd;
   access_conf_entry_t* first_entry;
+  access_conf_host_specifier_t* cur_hspec;
   char last;
+  access_conf_entry_t* last_entry;
   off_t len;
   off_t line;
   const char* path;
@@ -35,6 +40,10 @@ destroy_entry(
 void
 destroy_hspec(
   access_conf_host_specifier_t* hspec);
+
+void
+destroy_uspec(
+  char* uspec);
 
 /**
  * Consume an action, represented as either '+' or '-' (unquoted).
@@ -112,7 +121,8 @@ parse(
 
 bool
 parse_action(
-  parser_state_t* state, access_conf_entry_t* entry);
+  parser_state_t* state,
+  access_conf_entry_t* entry);
 
 /**
  * Print parse error to error log, prefixed by current line and column.
@@ -128,8 +138,19 @@ parse_file(
   const char* path);
 
 bool
+parse_host_specifier(
+  parser_state_t* state,
+  bool required,
+  access_conf_entry_t* entry);
+
+bool
 parse_line(
   parser_state_t* state);
+
+bool
+parse_user(
+  parser_state_t* state,
+  access_conf_entry_t* entry);
 
 /**
  * Writes the next char in the stream to nc without advancing the stream.

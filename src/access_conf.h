@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 typedef struct access_conf_host_specifier {
-  const char* hostname;
+  char* hostname;
   uint8_t ipv4_len;
   uint32_t ipv4_network;
   uint8_t ipv6_len;
@@ -18,7 +18,7 @@ typedef struct access_conf_entry {
   access_conf_host_specifier_t* hspec;
   struct access_conf_entry* next;
   bool permit;
-  const char* uspec;
+  char* uspec;
 } access_conf_entry_t;
 
 #endif /* __ACCESS_CONF_ENTRY_H__ */

@@ -10,7 +10,11 @@
 
 size_t pam_exec_osx_allocated_entry_count = 0;
 
+size_t pam_exec_osx_allocated_hostname_count = 0;
+
 size_t pam_exec_osx_allocated_hspec_count = 0;
+
+size_t pam_exec_osx_allocated_uspec_count = 0;
 
 void
 clean_state(
@@ -35,10 +39,11 @@ void
 destroy_entry(
   access_conf_entry_t* entry) {
   if (entry != NULL) {
-    pam_exec_osx_allocated_entry_count--;
     destroy_entry(entry->next);
     destroy_hspec(entry->hspec);
+    destroy_uspec(entry->uspec);
     free(entry);
+    pam_exec_osx_allocated_entry_count--;
   }
 }
 
@@ -49,6 +54,15 @@ destroy_hspec(
     pam_exec_osx_allocated_hspec_count--;
     destroy_hspec(hspec->next);
     free(hspec);
+  }
+}
+
+void
+destroy_uspec(
+  char* uspec) {
+  if (uspec != NULL) {
+    pam_exec_osx_allocated_uspec_count--;
+    free(uspec);
   }
 }
 
@@ -130,6 +144,7 @@ bool
 init_file(
   const char* path,
   parser_state_t* state) {
+  state->path = path;
   state->fd = open(path, O_RDONLY);
   if (state->fd == -1) {
     pam_access_osx_syslog(
@@ -168,14 +183,16 @@ void
 init_state(
   parser_state_t* state) {
   state->buf = NULL;
-  state->col = 0;
-  state->cur_entry = NULL;
+  state->col = 1;
   state->eof = false;
   state->err = false;
   state->fd = -1;
   state->first_entry = NULL;
+  state->last = 0;
+  state->last_entry = NULL;
   state->len = 0;
   state->line = 1;
+  state->path = NULL;
   state->pos = 0;
   state->start = NULL;
 }
@@ -196,7 +213,7 @@ next_char(
   } else {
     if (state->last == '\n') {
       state->line++;
-      state->col = 0;
+      state->col = 1;
     } else {
       state->col++;
     }
@@ -230,6 +247,8 @@ parse(
   }
   if (state->err) {
     destroy_entry(state->first_entry);
+    state->first_entry = NULL;
+    state->last_entry = NULL;
     return NULL;
   }
   return state->first_entry;
@@ -237,7 +256,8 @@ parse(
 
 bool
 parse_action(
-  parser_state_t* state, access_conf_entry_t* entry) {
+  parser_state_t* state,
+  access_conf_entry_t* entry) {
   if (!next_char(state)) {
     return false;
   }
@@ -258,7 +278,8 @@ parse_error(
   state->err = true;
   va_list args;
   va_start(args, format);
-  pam_access_osx_syslog(LOG_ERR, "%d:%d: PARSE ERROR: ", state->line, state->col);
+
+  pam_access_osx_syslog(LOG_ERR, "%s:%d:%d: PARSE ERROR: ", state->path, state->line, state->col);
   pam_access_osx_vsyslog(LOG_ERR, format, args);
 }
 
@@ -277,10 +298,60 @@ parse_file(
 }
 
 bool
+parse_host_specifier(
+  parser_state_t* state,
+  bool required,
+  access_conf_entry_t* entry) {
+  const char* start = &state->buf[state->pos];
+  if (!next_char(state)) {
+    if (!required) {
+      state->err = false;
+    }
+    return false;
+  }
+  if (!host_char(state->last)) {
+    if (required) {
+      parse_error(state, "Expected host specifier\n");
+    }
+    return false;
+  }
+  while (!state->eof && host_char(peek_char(state))) {
+    next_char(state);
+  }
+  const off_t size = &state->buf[+state->pos] - start + 1; // + 1 for '\0'
+
+  // allocate and populate hostname
+  char* hostname = calloc(size, sizeof(char));
+  if (hostname == NULL) {
+    parse_error(state, "Could not allocate memory for hostname: %s", strerror(errno));
+    return false;
+  }
+  pam_exec_osx_allocated_hostname_count++;
+  strlcpy(hostname, start, size);
+
+  // allocate and populate hspec
+  access_conf_host_specifier_t* new_hspec = calloc(size, sizeof(access_conf_host_specifier_t));
+  if (new_hspec == NULL) {
+    parse_error(state, "Could not allocate memory for hspec: %s", strerror(errno));
+    return false;
+  }
+  pam_exec_osx_allocated_hspec_count++;
+
+  // place hspec in entry in appropriate position
+  if (entry->hspec == NULL) {
+    entry->hspec = new_hspec;
+  } else {
+    state->cur_hspec->next = new_hspec;
+  }
+  state->cur_hspec = new_hspec;
+  return true;
+}
+
+bool
 parse_line(
   parser_state_t* state) {
-  // Build an entry. If all goes well, copy to heap and return.
   access_conf_entry_t entry;
+  bzero(&entry, sizeof(access_conf_entry_t));
   skip_whitespace(state);
   // Action
   if (!parse_action(state, &entry)) {
@@ -293,7 +364,7 @@ parse_line(
   }
   skip_whitespace(state);
   // User
-  if (!expect_user(state)) {
+  if (!parse_user(state, &entry)) {
     return false;
   }
   skip_whitespace(state);
@@ -302,29 +373,64 @@ parse_line(
     return false;
   }
   skip_whitespace(state);
-  // HS1
-  if (!expect_host_specifier(state)) {
+  // first host specifier
+  if (!parse_host_specifier(state, true, &entry)) {
     return false;
   }
-  // HS2-
-  while (skip_whitespace(state) || skip_host_specifier(state)) {
+  // remaining optional host specifiers
+  while (skip_whitespace(state) || parse_host_specifier(state, false, &entry)) {
+  }
+  if (state->err) {
+    return false;
   }
   // #.*\n
+  while (skip_comment(state) || skip_whitespace(state)) {
+  }
+  if (!state->eof && !skip_newline(state)) {
+    return false;
+  }
   while (skip_comment(state) || skip_newline(state) || skip_whitespace(state)) {
   }
-  access_conf_entry_t* new_entry = malloc(sizeof(parser_state_t));
+  access_conf_entry_t* new_entry = calloc(1, sizeof(access_conf_entry_t));
   if (new_entry == NULL) {
     parse_error(state, "Could not allocate memory for new entry: %s", strerror(errno));
     return false;
   }
   pam_exec_osx_allocated_entry_count++;
-  if (state->cur_entry != NULL) {
-    state->cur_entry->next = new_entry;
-  }
-  else {
+  memcpy(new_entry, &entry, sizeof(access_conf_entry_t));
+  if (state->first_entry == NULL) {
     state->first_entry = new_entry;
+  } else {
+    state->last_entry->next = new_entry;
   }
-  state->cur_entry = new_entry;
+  state->last_entry = new_entry;
+  return true;
+}
+
+bool
+parse_user(
+  parser_state_t* state,
+  access_conf_entry_t* entry) {
+  const char* start = &state->buf[state->pos];
+  if (!next_char(state)) {
+    return false;
+  }
+  if (!user_char(state->last)) {
+    parse_error(state, "Expected user\n");
+    return false;
+  }
+  while (!state->eof && user_char(peek_char(state))) {
+    next_char(state);
+  }
+  const off_t size = &state->buf[+state->pos] - start + 1; // +'\0'
+  char* uspec = calloc(size, sizeof(char));
+  if (uspec == NULL) {
+    parse_error(state, "Could not allocate memory for uspec: %s", strerror(errno));
+    return false;
+  }
+  pam_exec_osx_allocated_uspec_count++;
+  strlcpy(uspec, start, size);
+  entry->uspec = uspec;
   return true;
 }
 
@@ -362,7 +468,6 @@ skip_host_specifier(
     consumed = true;
   }
   return consumed;
-
 }
 
 bool

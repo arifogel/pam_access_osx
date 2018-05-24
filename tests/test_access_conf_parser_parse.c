@@ -15,9 +15,11 @@ int main(void) {
   assert(first_entry != NULL);
   assert(pam_exec_osx_allocated_entry_count > 0);
   assert(pam_exec_osx_allocated_hspec_count > 0);
+  assert(pam_exec_osx_allocated_uspec_count > 0);
   destroy_entry(first_entry);
   assert(pam_exec_osx_allocated_entry_count == 0);
   assert(pam_exec_osx_allocated_hspec_count == 0);
+  assert(pam_exec_osx_allocated_uspec_count == 0);
   exit(0);
 }
 
