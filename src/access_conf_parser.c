@@ -51,9 +51,11 @@ void
 destroy_hspec(
   access_conf_host_specifier_t* hspec) {
   if (hspec != NULL) {
-    pam_exec_osx_allocated_hspec_count--;
     destroy_hspec(hspec->next);
+    free(hspec->hostname);
+    pam_exec_osx_allocated_hostname_count--;
     free(hspec);
+    pam_exec_osx_allocated_hspec_count--;
   }
 }
 
@@ -336,6 +338,7 @@ parse_host_specifier(
     return false;
   }
   pam_exec_osx_allocated_hspec_count++;
+  new_hspec->hostname = hostname;
 
   // place hspec in entry in appropriate position
   if (entry->hspec == NULL) {

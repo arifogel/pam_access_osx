@@ -12,12 +12,21 @@
 int main(void) {
   pam_access_osx_log_level = LOG_INFO;
   access_conf_entry_t* first_entry = parse_file(TEST_ACCESS_CONF);
+
+  // Leading entry should be returned
   assert(first_entry != NULL);
-  assert(pam_exec_osx_allocated_entry_count > 0);
-  assert(pam_exec_osx_allocated_hspec_count > 0);
-  assert(pam_exec_osx_allocated_uspec_count > 0);
+
+  // Should have allocated corresponding # of entry, hostname, hspec, uspec
+  assert(pam_exec_osx_allocated_entry_count == 5);
+  assert(pam_exec_osx_allocated_hostname_count == 6);
+  assert(pam_exec_osx_allocated_hspec_count == 6);
+  assert(pam_exec_osx_allocated_uspec_count == 5);
+
   destroy_entry(first_entry);
+
+  // All items should be deallocated
   assert(pam_exec_osx_allocated_entry_count == 0);
+  assert(pam_exec_osx_allocated_hostname_count == 0);
   assert(pam_exec_osx_allocated_hspec_count == 0);
   assert(pam_exec_osx_allocated_uspec_count == 0);
   exit(0);
