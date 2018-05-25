@@ -333,7 +333,7 @@ parse_host_specifier(
   while (!state->eof && host_char(peek_char(state))) {
     next_char(state);
   }
-  const off_t size = &state->buf[+state->pos] - start + 1; // + 1 for '\0'
+  const off_t size = &state->buf[state->pos] - start + 1; // + 1 for '\0'
 
   // allocate and populate hostname
   char* hostname = calloc(size, sizeof(char));
@@ -342,10 +342,11 @@ parse_host_specifier(
     return false;
   }
   pam_exec_osx_allocated_hostname_count++;
-  strlcpy(hostname, start, size);
+  strncpy(hostname, start, size - 1);
+  hostname[size - 1] = '\0';
 
   // allocate and populate hspec
-  access_conf_host_specifier_t* new_hspec = calloc(size, sizeof(access_conf_host_specifier_t));
+  access_conf_host_specifier_t* new_hspec = calloc(1, sizeof(access_conf_host_specifier_t));
   if (new_hspec == NULL) {
     parse_error(state, "Could not allocate memory for hspec: %s", strerror(errno));
     return false;
@@ -453,7 +454,8 @@ parse_user(
     return false;
   }
   pam_exec_osx_allocated_uspec_count++;
-  strlcpy(uspec, start, size);
+  strncpy(uspec, start, size - 1);
+  uspec[size - 1] = '\0';
   entry->uspec = uspec;
   return true;
 }
@@ -536,22 +538,21 @@ sp_ipv4_address(
   parser_state_t* state,
   const char* hostname,
   access_conf_host_specifier_t* hspec) {
-  struct sockaddr_in sin;
-  int ipv4_result = inet_pton(AF_INET, hostname, &(sin.sin_addr));
-  if (ipv4_result < 0) {
-    state->err = true;
-    pam_access_osx_syslog(
-    LOG_ERR, "Could not check if hostname is IPv4 address: %s", strerror(errno));
+  uint32_t addr;
+  int result = inet_pton(AF_INET, hostname, &addr);
+  if (result <= 0) {
+    if (result < 0) {
+      state->err = true;
+      pam_access_osx_syslog(
+      LOG_ERR, "Could not check if hostname is IPv4 address: %s", strerror(errno));
+    }
     return false;
   }
-  if (ipv4_result) {
-    hspec->ipv4_network = ntohl(sin.sin_addr.s_addr);
-    hspec->ipv4_len = 32;
-    hspec->type = HST_IPV4_ADDRESS;
-    pam_exec_osx_hspec_ipv4_address_count++;
-    return true;
-  }
-  return false;
+  hspec->ipv4_network = ntohl(addr);
+  hspec->ipv4_len = 32;
+  hspec->type = HST_IPV4_ADDRESS;
+  pam_exec_osx_hspec_ipv4_address_count++;
+  return true;
 }
 
 bool
@@ -595,24 +596,107 @@ sp_ipv4_network(
     return false;
   }
   char addr_str[ADDR_STR_MAX_LEN] = { 0 };
-  strlcpy(addr_str, hostname, addr_str_len + 1);
+  strncpy(addr_str, hostname, addr_str_len);
+  addr_str[addr_str_len] = '\0';
 
-  struct sockaddr_in sin;
-  int ipv4_result = inet_pton(AF_INET, addr_str, &(sin.sin_addr));
-  if (ipv4_result < 0) {
-    state->err = true;
-    pam_access_osx_syslog(
-    LOG_ERR, "Could not check if hostname is IPv4 network: %s", strerror(errno));
+  struct in_addr addr;
+  int result = inet_pton(AF_INET, addr_str, &addr);
+  if (result <= 0) {
+    if (result < 0) {
+      state->err = true;
+      pam_access_osx_syslog(
+      LOG_ERR, "Could not check if host: '%s' is IPv4 network: %s", hostname, strerror(errno));
+    }
     return false;
   }
-  if (ipv4_result) {
-    hspec->ipv4_network = ntohl(sin.sin_addr.s_addr);
-    hspec->ipv4_len = prefix_len;
-    hspec->type = HST_IPV4_NETWORK;
-    pam_exec_osx_hspec_ipv4_network_count++;
-    return true;
+  hspec->ipv4_network = ntohl(*(uint32_t* )(&addr));
+  hspec->ipv4_len = prefix_len;
+  hspec->type = HST_IPV4_NETWORK;
+  pam_exec_osx_hspec_ipv4_network_count++;
+  return true;
+}
+
+bool
+sp_ipv6_address(
+  parser_state_t* state,
+  const char* hostname,
+  access_conf_host_specifier_t* hspec) {
+  struct in6_addr addr6;
+  int result = inet_pton(AF_INET6, hostname, &addr6);
+  if (result <= 0) {
+    if (result < 0) {
+      state->err = true;
+      pam_access_osx_syslog(
+      LOG_ERR, "Could not check if hostname is IPv6 address: %s", strerror(errno));
+    }
+    return false;
   }
-  return false;
+  hspec->ipv6_network = addr6;
+  hspec->ipv6_len = 128;
+  hspec->type = HST_IPV6_ADDRESS;
+  pam_exec_osx_hspec_ipv6_address_count++;
+  return true;
+}
+
+bool
+sp_ipv6_network(
+  parser_state_t* state,
+  const char* hostname,
+  access_conf_host_specifier_t* hspec) {
+  char* delim = strchr(hostname, '/');
+  if (delim == NULL) {
+    return false;
+  }
+  if (delim != strrchr(hostname, '/')) {
+    return false;
+  }
+  //// There is one '/' at delim
+  char* prefix_len_str = delim + 1;
+
+  //// Verify prefix_len_str represents a number between 0-32
+  size_t prefix_len_str_size = strlen(prefix_len_str);
+  size_t prefix_len = 0;
+  switch (prefix_len_str_size) {
+    case 2:
+      if (!digit(prefix_len_str[1])) {
+        return false;
+      }
+      prefix_len += (prefix_len_str[1] - '0');
+      /* no break */
+    case 1:
+      if (!digit(prefix_len_str[0])) {
+        return false;
+      }
+      prefix_len += (10 * (prefix_len_str[0] - '0'));
+      break;
+    default:
+      return false;
+  }
+
+  //// Put IP portion in separate string.
+  off_t addr_str_len = delim - hostname;
+  if (addr_str_len >= ADDR6_STR_MAX_LEN) {
+    return false;
+  }
+  char addr_str[ADDR6_STR_MAX_LEN] = { 0 };
+  strncpy(addr_str, hostname, addr_str_len);
+  addr_str[addr_str_len] = '\0';
+
+  struct in6_addr addr6;
+  int result = inet_pton(AF_INET6, addr_str, &addr6);
+  if (result <= 0) {
+    if (result < 0) {
+      state->err = true;
+      pam_access_osx_syslog(
+      LOG_ERR, "Could not check if host: '%s' is IPv6 network: %s", hostname, strerror(errno));
+    }
+    return false;
+  }
+  hspec->ipv6_network = addr6;
+  hspec->ipv6_len = prefix_len;
+  hspec->type = HST_IPV6_NETWORK;
+  pam_exec_osx_hspec_ipv6_network_count++;
+  return true;
 }
 
 bool
@@ -641,10 +725,18 @@ specialize_hspec(
   }
 
 // IPv6 address
-// TODO
+  if (sp_ipv6_address(state, hostname, hspec)) {
+    return true;
+  } else if (state->err) {
+    return false;
+  }
 
 // IPv6 network
-// TODO
+  if (sp_ipv6_network(state, hostname, hspec)) {
+    return true;
+  } else if (state->err) {
+    return false;
+  }
 
 // hostname
   hspec->type = HST_HOSTNAME;

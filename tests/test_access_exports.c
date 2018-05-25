@@ -7,7 +7,9 @@
 
 void* pam_access_osx;
 
-int main(void) {
+int
+main(
+  void) {
   // Load module
   pam_access_osx = dlopen(".libs/pam_access_osx.so", RTLD_NOW | RTLD_GLOBAL | RTLD_FIRST);
   if (pam_access_osx == NULL) {
@@ -22,8 +24,8 @@ int main(void) {
     int,
     int,
     const char**) =
-      (int(*)(pam_handle_t*, int, int, const char**))
-      dlsym(pam_access_osx, "pam_sm_authenticate");
+    (int(*)(pam_handle_t*, int, int, const char**))
+    dlsym(pam_access_osx, "pam_sm_authenticate");
   if (pam_sm_authenticate == NULL) {
     fprintf(stderr, "Failed to load pam_sm_authenticate function: %s", dlerror());
     exit(1);

@@ -7,7 +7,9 @@
 
 #define TEST_BAD_ACCESS_CONF ("tests/resources/etc/bad-access.conf")
 
-int main(void) {
+int
+main(
+  void) {
   pam_access_osx_log_level = LOG_EMERG;
   if (validate_file(TEST_BAD_ACCESS_CONF)) {
     fprintf(stderr, "Improperly validated: '%s'\n", TEST_BAD_ACCESS_CONF);

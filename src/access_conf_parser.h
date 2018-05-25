@@ -6,6 +6,7 @@
 #include "access_conf.h"
 
 #define ADDR_STR_MAX_LEN (16)
+#define ADDR6_STR_MAX_LEN (48)
 
 #define PARSER_ERROR (-1)
 #define PARSER_SUCCESS (0)
