@@ -538,7 +538,7 @@ sp_ipv4_address(
   parser_state_t* state,
   const char* hostname,
   access_conf_host_specifier_t* hspec) {
-  uint32_t addr;
+  ipv4_addr_t addr;
   int result = inet_pton(AF_INET, hostname, &addr);
   if (result <= 0) {
     if (result < 0) {
@@ -548,7 +548,7 @@ sp_ipv4_address(
     }
     return false;
   }
-  hspec->network.net4.address = ntohl(addr);
+  hspec->network.net4.address = addr;
   hspec->network.net4.length = 32;
   hspec->type = HST_IPV4_ADDRESS;
   pam_exec_osx_hspec_ipv4_address_count++;
@@ -599,7 +599,7 @@ sp_ipv4_network(
   strncpy(addr_str, hostname, addr_str_len);
   addr_str[addr_str_len] = '\0';
 
-  struct in_addr addr;
+  ipv4_addr_t addr;
   int result = inet_pton(AF_INET, addr_str, &addr);
   if (result <= 0) {
     if (result < 0) {
@@ -609,7 +609,7 @@ sp_ipv4_network(
     }
     return false;
   }
-  hspec->network.net4.address = ntohl(*(uint32_t* )(&addr));
+  hspec->network.net4.address = addr;
   hspec->network.net4.length = prefix_len;
   hspec->type = HST_IPV4_NETWORK;
   pam_exec_osx_hspec_ipv4_network_count++;
@@ -621,7 +621,7 @@ sp_ipv6_address(
   parser_state_t* state,
   const char* hostname,
   access_conf_host_specifier_t* hspec) {
-  struct in6_addr addr6;
+  ipv6_addr_t addr6;
   int result = inet_pton(AF_INET6, hostname, &addr6);
   if (result <= 0) {
     if (result < 0) {
@@ -682,7 +682,7 @@ sp_ipv6_network(
   strncpy(addr_str, hostname, addr_str_len);
   addr_str[addr_str_len] = '\0';
 
-  struct in6_addr addr6;
+  ipv6_addr_t addr6;
   int result = inet_pton(AF_INET6, addr_str, &addr6);
   if (result <= 0) {
     if (result < 0) {
