@@ -54,7 +54,7 @@ destroy_entry(
   if (entry != NULL) {
     destroy_entry(entry->next);
     destroy_hspec(entry->hspec);
-    destroy_uspec(entry->uspec.ug);
+    destroy_uspec((char*)entry->uspec.ug);
     free(entry);
     pam_exec_osx_allocated_entry_count--;
   }
@@ -65,7 +65,7 @@ destroy_hspec(
   access_conf_host_specifier_t* hspec) {
   if (hspec != NULL) {
     destroy_hspec(hspec->next);
-    free(hspec->hostname);
+    free((char*)hspec->hostname);
     pam_exec_osx_allocated_hostname_count--;
     free(hspec);
     pam_exec_osx_allocated_hspec_count--;
@@ -304,7 +304,7 @@ parse_file(
   parser_state_t state;
   init_state(&state);
   if (!init_file(path, &state)) {
-    return false;
+    return NULL;
   }
   pam_access_osx_syslog(LOG_DEBUG, "Begin parsing configuration file: '%s'\n", path);
   access_conf_entry_t* access_conf = parse(&state);

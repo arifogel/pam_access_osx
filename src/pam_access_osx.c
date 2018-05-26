@@ -16,8 +16,11 @@
 #include <stdio.h>
 #endif
 
+#include "access_conf.h"
+#include "access_conf_parser.h"
 #include "pam_access_osx.h"
 
+char* pam_access_osx_access_conf_path = PAM_ACCESS_OSX_DEFAULT_ACCESS_CONF_PATH;
 int pam_access_osx_log_level = PAM_ACCESS_OSX_LOG_LEVEL;
 
 int
@@ -95,7 +98,17 @@ pam_sm_authenticate(
     pam_access_osx_syslog(LOG_ERR, "Error retrieving PAM variables\n");
     return (PAM_AUTH_ERR);
   }
-  return (PAM_SUCCESS);
+  access_conf_entry_t* access_conf = parse_file(pam_access_osx_access_conf_path);
+  if (access_conf == NULL) {
+    return (PAM_AUTH_ERR);
+  }
+  bool permitted = access_conf_permit(access_conf, pam_user, get_hinfo(pam_rhost));
+  destroy_entry(access_conf);
+  if (permitted) {
+    return (PAM_SUCCESS);
+  } else {
+    return (PAM_AUTH_ERR);
+  }
 }
 
 PAM_EXTERN

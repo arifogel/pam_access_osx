@@ -9,6 +9,8 @@
 
 #include "pam_access_osx_config.h"
 
+#define PAM_ACCESS_OSX_DEFAULT_ACCESS_CONF_PATH ("/etc/security/access.conf")
+
 #define PAM_ACCESS_OSX_CHILD_DENY (1)
 #define PAM_ACCESS_OSX_CHILD_ERR (-1)
 #define PAM_ACCESS_OSX_CHILD_PERMIT (0)
@@ -19,6 +21,8 @@
 
 #define PAM_ACCESS_OSX_ENV_USER ("PAM_ACCESS_OSX_USER")
 #define PAM_ACCESS_OSX_ENV_RHOST ("PAM_ACCESS_OSX_RHOST")
+
+extern char* pam_access_osx_access_conf_path;
 
 extern int pam_access_osx_log_level;
 

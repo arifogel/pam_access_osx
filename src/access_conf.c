@@ -48,7 +48,7 @@ entry_match(
 
 host_info_t
 get_hinfo(
-  char* host_str) {
+  const char* host_str) {
   ipv4_addr_t addr4;
   if (inet_pton(AF_INET, host_str, &addr4) > 0) {
     host_info_t hinfo = { .id = { .ip4 = addr4 }, .type = HST_IPV4_NETWORK };

@@ -14,7 +14,7 @@ typedef enum host_specifier_type {
 } host_specifier_type_t;
 
 typedef union host_info_id {
-  char* hostname;
+  const char* hostname;
   ipv4_addr_t ip4;
   ipv6_addr_t ip6;
 } host_info_id_t;
@@ -25,7 +25,7 @@ typedef struct host_info {
 } host_info_t;
 
 typedef struct access_conf_host_specifier {
-  char* hostname;
+  const char* hostname;
   ip_network_t network;
   struct access_conf_host_specifier* next;
   host_specifier_type_t type;
@@ -34,7 +34,7 @@ typedef struct access_conf_host_specifier {
 typedef struct access_conf_user_specifier {
   bool all;
   bool group;
-  char* ug;
+  const char* ug;
 } access_conf_user_specifier_t;
 
 typedef struct access_conf_entry {
@@ -69,7 +69,7 @@ entry_match(
 
 host_info_t
 get_hinfo(
-  char* host_str);
+  const char* host_str);
 
 bool
 hspec_match(
