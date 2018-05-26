@@ -10,7 +10,8 @@ pam_access_osx_LTLIBRARIES = pam_access_osx.la
 MODULE_SRC = \
    src/pam_access_osx.h src/pam_access_osx.c \
 	 src/access_conf_parser.h src/access_conf_parser.c \
-	 src/access_conf.h
+	 src/access_conf.h src/access_conf.c \
+	 src/ip_util.h src/ip_util.c
 
 pam_access_osx_la_LDFLAGS = $(AM_LDFLAGS) -avoid-version -export-dynamic -module -shared -export-symbols-regex "pam_sm_authenticate"
 pam_access_osx_la_LIBADD = -lpam
@@ -21,7 +22,8 @@ TEST_NAMES = \
 	test_access_exports \
 	test_access_conf_parser_validate_invalid \
 	test_access_conf_parser_validate_valid \
-	test_access_conf_parser_parse
+	test_access_conf_parser_parse \
+	test_ip_network
 
 TESTS = $(TEST_NAMES)
 
@@ -56,3 +58,7 @@ test_access_conf_parser_validate_valid_CPPFLAGS = -I$(top_srcdir)/src
 test_access_conf_parser_validate_valid_LDADD = $(TEST_LDFLAGS)
 test_access_conf_parser_validate_valid_SOURCES = tests/test_access_conf_parser_validate_valid.c $(MODULE_SRC)
 
+test_ip_network_CFLAGS = $(TEST_CFLAGS)
+test_ip_network_CPPFLAGS = -I$(top_srcdir)/src
+test_ip_network_LDADD = $(TEST_LDFLAGS)
+test_ip_network_SOURCES = tests/test_ip_network.c $(MODULE_SRC)

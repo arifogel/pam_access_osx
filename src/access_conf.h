@@ -2,8 +2,10 @@
 #define __ACCESS_CONF_ENTRY_H__
 
 #include <arpa/inet.h>
+#include <ip_util.h>
 #include <stdbool.h>
 #include <stdint.h>
+
 
 typedef enum host_specifier_type {
   HST_ALL = 1,
@@ -16,10 +18,7 @@ typedef enum host_specifier_type {
 
 typedef struct access_conf_host_specifier {
   char* hostname;
-  uint8_t ipv4_len;
-  uint32_t ipv4_network;
-  uint8_t ipv6_len;
-  struct in6_addr ipv6_network;
+  ip_network_t network;
   struct access_conf_host_specifier* next;
   host_specifier_type_t type;
 } access_conf_host_specifier_t;

@@ -548,8 +548,8 @@ sp_ipv4_address(
     }
     return false;
   }
-  hspec->ipv4_network = ntohl(addr);
-  hspec->ipv4_len = 32;
+  hspec->network.net4.address = ntohl(addr);
+  hspec->network.net4.length = 32;
   hspec->type = HST_IPV4_ADDRESS;
   pam_exec_osx_hspec_ipv4_address_count++;
   return true;
@@ -609,8 +609,8 @@ sp_ipv4_network(
     }
     return false;
   }
-  hspec->ipv4_network = ntohl(*(uint32_t* )(&addr));
-  hspec->ipv4_len = prefix_len;
+  hspec->network.net4.address = ntohl(*(uint32_t* )(&addr));
+  hspec->network.net4.length = prefix_len;
   hspec->type = HST_IPV4_NETWORK;
   pam_exec_osx_hspec_ipv4_network_count++;
   return true;
@@ -631,8 +631,8 @@ sp_ipv6_address(
     }
     return false;
   }
-  hspec->ipv6_network = addr6;
-  hspec->ipv6_len = 128;
+  hspec->network.net6.address = addr6;
+  hspec->network.net6.length = 128;
   hspec->type = HST_IPV6_ADDRESS;
   pam_exec_osx_hspec_ipv6_address_count++;
   return true;
@@ -692,8 +692,8 @@ sp_ipv6_network(
     }
     return false;
   }
-  hspec->ipv6_network = addr6;
-  hspec->ipv6_len = prefix_len;
+  hspec->network.net6.address = addr6;
+  hspec->network.net6.length = prefix_len;
   hspec->type = HST_IPV6_NETWORK;
   pam_exec_osx_hspec_ipv6_network_count++;
   return true;
