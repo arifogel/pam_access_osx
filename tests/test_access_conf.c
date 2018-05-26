@@ -6,11 +6,16 @@
 int
 main(
   void) {
-  // user specifier
+  // user specifier - user
   access_conf_user_specifier_t uspec1 = { .group = false, .ug = "user1" };
 
   assert(uspec_match(uspec1, "user1"));
   assert(!uspec_match(uspec1, "user2"));
+
+  // user specifier - ALL
+  access_conf_user_specifier_t uspec_all = { .group = false, .all = true };
+
+  assert(uspec_match(uspec_all, "user3"));
 
   // host specifier - hostname
   access_conf_host_specifier_t hspec_hostname = { .hostname = "example.com", .type = HST_HOSTNAME };
@@ -108,7 +113,9 @@ main(
   assert(access_conf_entry_match(&entry_action_permit, "user1", get_hinfo("example.co.uk")) == &entry_action_permit);
   assert(access_conf_permit(&entry_action_permit, "user1", get_hinfo("example.co.uk")));
   assert(access_conf_entry_match(&entry_action_permit, "user1", get_hinfo("example.ca")) == &entry_action_deny);
-  assert(!access_conf_permit(&entry_action_permit, "user1", get_hinfo("example.co.ca")));
+  assert(!access_conf_permit(&entry_action_permit, "user1", get_hinfo("example.ca")));
   assert(access_conf_entry_match(&entry_action_permit, "user1", get_hinfo("example.foo")) == NULL);
-  assert(!access_conf_permit(&entry_action_permit, "user1", get_hinfo("example.foo")));
+  assert(access_conf_permit(&entry_action_permit, "user1", get_hinfo("example.foo")));
+
+  return 0;
 }

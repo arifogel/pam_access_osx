@@ -457,6 +457,9 @@ parse_user(
   strncpy(ug_str, start, size - 1);
   ug_str[size - 1] = '\0';
   entry->uspec.ug = ug_str;
+  if (!strcmp(ug_str, "ALL")) {
+    entry->uspec.all = true;
+  }
   return true;
 }
 
@@ -572,19 +575,19 @@ sp_ipv4_network(
 
   //// Verify prefix_len_str represents a number between 0-32
   size_t prefix_len_str_size = strlen(prefix_len_str);
-  size_t prefix_len = 0;
+  size_t prefix_len;
   switch (prefix_len_str_size) {
     case 2:
-      if (!digit(prefix_len_str[1])) {
+      if (!digit(prefix_len_str[1]) || !digit(prefix_len_str[0])) {
         return false;
       }
-      prefix_len += (prefix_len_str[1] - '0');
-      /* no break */
+      prefix_len = (prefix_len_str[1] - '0') + (10 * (prefix_len_str[0] - '0'));
+      break;
     case 1:
       if (!digit(prefix_len_str[0])) {
         return false;
       }
-      prefix_len += (10 * (prefix_len_str[0] - '0'));
+      prefix_len = prefix_len_str[0] - '0';
       break;
     default:
       return false;
@@ -655,19 +658,25 @@ sp_ipv6_network(
 
   //// Verify prefix_len_str represents a number between 0-32
   size_t prefix_len_str_size = strlen(prefix_len_str);
-  size_t prefix_len = 0;
+  size_t prefix_len;
   switch (prefix_len_str_size) {
-    case 2:
-      if (!digit(prefix_len_str[1])) {
+    case 3:
+      if (!digit(prefix_len_str[2]) || !digit(prefix_len_str[1]) || !digit(prefix_len_str[0])) {
         return false;
       }
-      prefix_len += (prefix_len_str[1] - '0');
-      /* no break */
+      prefix_len = (prefix_len_str[2] - '0') + (10 * (prefix_len_str[1] - '0')) + (100 * (prefix_len_str[0] - '0'));
+      break;
+    case 2:
+      if (!digit(prefix_len_str[1]) || !digit(prefix_len_str[0])) {
+        return false;
+      }
+      prefix_len = (prefix_len_str[1] - '0') + (10 * (prefix_len_str[0] - '0'));
+      break;
     case 1:
       if (!digit(prefix_len_str[0])) {
         return false;
       }
-      prefix_len += (10 * (prefix_len_str[0] - '0'));
+      prefix_len = prefix_len_str[0] - '0';
       break;
     default:
       return false;

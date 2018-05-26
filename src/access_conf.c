@@ -22,7 +22,7 @@ access_conf_permit(
   const char* ug_str,
   const host_info_t hinfo) {
   access_conf_entry_t* matching_entry = access_conf_entry_match(entry, ug_str, hinfo);
-  return matching_entry != NULL && matching_entry->permit;
+  return matching_entry == NULL || matching_entry->permit;
 }
 
 access_conf_host_specifier_t*
@@ -92,6 +92,9 @@ bool
 uspec_match(
   access_conf_user_specifier_t uspec,
   const char* ug_str) {
+  if (uspec.all) {
+    return true;
+  }
   if (uspec.group) {
     /* not currently supported */
     return false;

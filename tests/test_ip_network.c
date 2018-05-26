@@ -42,4 +42,6 @@ main(
 
   assert(ipv6_network_contains(n6_2, addr6_in_2));
   assert(!ipv6_network_contains(n6_2, addr6_out_2));
+
+  return 0;
 }

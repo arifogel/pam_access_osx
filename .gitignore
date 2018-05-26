@@ -58,6 +58,7 @@ test_access_conf
 test_access_conf_parser_validate_invalid
 test_access_conf_parser_validate_valid
 test_access_conf_parser_parse
+test_end_to_end
 test_ip_network
 
 *.la

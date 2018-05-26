@@ -32,8 +32,9 @@ typedef struct access_conf_host_specifier {
 } access_conf_host_specifier_t;
 
 typedef struct access_conf_user_specifier {
-  char* ug;
+  bool all;
   bool group;
+  char* ug;
 } access_conf_user_specifier_t;
 
 typedef struct access_conf_entry {

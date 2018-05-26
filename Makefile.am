@@ -24,7 +24,8 @@ TEST_NAMES = \
 	test_access_conf_parser_validate_invalid \
 	test_access_conf_parser_validate_valid \
 	test_access_conf_parser_parse \
-	test_ip_network
+	test_ip_network \
+	test_end_to_end
 
 TESTS = $(TEST_NAMES)
 
@@ -68,3 +69,8 @@ test_ip_network_CFLAGS = $(TEST_CFLAGS)
 test_ip_network_CPPFLAGS = -I$(top_srcdir)/src
 test_ip_network_LDADD = $(TEST_LDFLAGS)
 test_ip_network_SOURCES = tests/test_ip_network.c $(MODULE_SRC)
+
+test_end_to_end_CFLAGS = $(TEST_CFLAGS)
+test_end_to_end_CPPFLAGS = -I$(top_srcdir)/src
+test_end_to_end_LDADD = $(TEST_LDFLAGS)
+test_end_to_end_SOURCES = tests/test_end_to_end.c $(MODULE_SRC)
