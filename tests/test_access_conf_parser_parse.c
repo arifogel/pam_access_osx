@@ -20,14 +20,14 @@ main(
   assert(first_entry != NULL);
 
   // Should have allocated corresponding # of entry, hostname, hspec, uspec
-  assert(pam_exec_osx_allocated_entry_count == 7);
-  assert(pam_exec_osx_allocated_hostname_count == 10);
-  assert(pam_exec_osx_allocated_hspec_count == 10);
-  assert(pam_exec_osx_allocated_uspec_count == 7);
+  assert(pam_exec_osx_allocated_entry_count == 8);
+  assert(pam_exec_osx_allocated_hostname_count == 11);
+  assert(pam_exec_osx_allocated_hspec_count == 11);
+  assert(pam_exec_osx_allocated_uspec_count == 8);
 
   // Should have corresponding counts for hspec types
   assert(pam_exec_osx_hspec_all_count == 1);
-  assert(pam_exec_osx_hspec_ipv4_address_count == 1);
+  assert(pam_exec_osx_hspec_ipv4_address_count == 2);
   assert(pam_exec_osx_hspec_ipv4_network_count == 3);
   assert(pam_exec_osx_hspec_ipv6_address_count == 1);
   assert(pam_exec_osx_hspec_ipv6_network_count == 3);
@@ -41,6 +41,18 @@ main(
   assert(!strcmp(cur_entry->uspec.ug, "alice"));
   assert(cur_entry->hspec->type = HST_IPV4_NETWORK);
   assert(!strcmp(cur_entry->hspec->hostname, "127.0.0.1"));
+  assert(cur_entry->hspec->network.net4.length == 32);
+  assert(!cur_entry->hspec->next);
+  assert(cur_entry->next);
+
+  // alice 2
+  cur_entry = cur_entry->next;
+  assert(cur_entry->permit);
+  assert(!cur_entry->uspec.all);
+  assert(!cur_entry->uspec.group);
+  assert(!strcmp(cur_entry->uspec.ug, "alice"));
+  assert(cur_entry->hspec->type = HST_IPV4_NETWORK);
+  assert(!strcmp(cur_entry->hspec->hostname, "1.2.3.4"));
   assert(cur_entry->hspec->network.net4.length == 32);
   assert(!cur_entry->hspec->next);
   assert(cur_entry->next);

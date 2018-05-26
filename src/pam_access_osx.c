@@ -100,14 +100,20 @@ pam_sm_authenticate(
   }
   access_conf_entry_t* access_conf = parse_file(pam_access_osx_access_conf_path);
   if (access_conf == NULL) {
+    pam_access_osx_syslog(
+    LOG_ERR, "Error parsing configuration file: %s\n", pam_access_osx_access_conf_path);
     return (PAM_AUTH_ERR);
   }
   bool permitted = access_conf_permit(access_conf, pam_user, get_hinfo(pam_rhost));
   destroy_entry(access_conf);
   if (permitted) {
+    pam_access_osx_syslog(
+    LOG_NOTICE, "Granted access to user: '%s' from remote host '%s'\n", pam_user, pam_rhost);
     return (PAM_SUCCESS);
   } else {
-    return (PAM_AUTH_ERR);
+    pam_access_osx_syslog(
+    LOG_NOTICE, "Denied access to user: '%s' from remote host '%s'\n", pam_user, pam_rhost);
+    return (PAM_PERM_DENIED);
   }
 }
 

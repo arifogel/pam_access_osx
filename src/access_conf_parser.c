@@ -54,7 +54,7 @@ destroy_entry(
   if (entry != NULL) {
     destroy_entry(entry->next);
     destroy_hspec(entry->hspec);
-    destroy_uspec((char*)entry->uspec.ug);
+    destroy_uspec((char*) entry->uspec.ug);
     free(entry);
     pam_exec_osx_allocated_entry_count--;
   }
@@ -65,7 +65,7 @@ destroy_hspec(
   access_conf_host_specifier_t* hspec) {
   if (hspec != NULL) {
     destroy_hspec(hspec->next);
-    free((char*)hspec->hostname);
+    free((char*) hspec->hostname);
     pam_exec_osx_allocated_hostname_count--;
     free(hspec);
     pam_exec_osx_allocated_hspec_count--;
@@ -90,7 +90,6 @@ digit(
 bool
 expect_action(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered expect_action\n");
   if (!next_char(state)) {
     return false;
   }
@@ -104,7 +103,6 @@ expect_action(
 bool
 expect_colon(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered expect_colon\n");
   if (!next_char(state)) {
     return false;
   }
@@ -118,7 +116,6 @@ expect_colon(
 bool
 expect_host_specifier(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered expect_host_specifier\n");
   if (!next_char(state)) {
     return false;
   }
@@ -135,7 +132,6 @@ expect_host_specifier(
 bool
 expect_user(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered expect_user\n");
   if (!next_char(state)) {
     return false;
   }
@@ -221,7 +217,6 @@ lower(
 bool
 next_char(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered next_char\n");
   if (state->eof) {
     state->err = true;
     return false;
@@ -248,7 +243,6 @@ next_char(
     default:
       chstr[0] = state->last;
   }
-  pam_access_osx_syslog(LOG_DEBUG, "%d:%d: Consumed '%s'\n", state->line, state->col, chstr);
   return true;
 }
 
@@ -289,7 +283,6 @@ parse_error(
   parser_state_t* state,
   const char* format,
   ...) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered parse_error\n");
   state->err = true;
   va_list args;
   va_start(args, format);
@@ -318,21 +311,15 @@ parse_host_specifier(
   bool required,
   access_conf_entry_t* entry) {
   const char* start = &state->buf[state->pos];
-  if (!next_char(state)) {
-    if (!required) {
-      state->err = false;
-    }
-    return false;
-  }
-  if (!host_char(state->last)) {
+  if (!host_char(peek_char(state))) {
     if (required) {
       parse_error(state, "Expected host specifier\n");
     }
     return false;
   }
-  while (!state->eof && host_char(peek_char(state))) {
+  do {
     next_char(state);
-  }
+  } while (!state->eof && host_char(peek_char(state)));
   const off_t size = &state->buf[state->pos] - start + 1; // + 1 for '\0'
 
   // allocate and populate hostname
@@ -376,7 +363,7 @@ bool
 parse_line(
   parser_state_t* state) {
   access_conf_entry_t entry;
-  bzero(&entry, sizeof(access_conf_entry_t));
+  memset(&entry, 0, sizeof(access_conf_entry_t));
   skip_whitespace(state);
   // Action
   if (!parse_action(state, &entry)) {
@@ -466,14 +453,12 @@ parse_user(
 char
 peek_char(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered peek_char\n");
   return state->buf[state->pos];
 }
 
 bool
 skip_comment(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered skip_comment\n");
   bool consumed = false;
   if (!state->eof && peek_char(state) == '#') {
     // Skip '#'
@@ -490,7 +475,6 @@ skip_comment(
 bool
 skip_host_specifier(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered skip_host_specifier\n");
   bool consumed = false;
   while (!state->eof && host_char(peek_char(state))) {
     next_char(state);
@@ -502,7 +486,6 @@ skip_host_specifier(
 bool
 skip_newline(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered skip_newline\n");
   bool consumed = false;
   if (!state->eof && peek_char(state) == '\n') {
     next_char(state);
@@ -514,7 +497,6 @@ skip_newline(
 bool
 skip_whitespace(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered skip_whitespace\n");
   bool consumed = false;
   while (!state->eof && whitespace(peek_char(state))) {
     next_char(state);
@@ -664,7 +646,8 @@ sp_ipv6_network(
       if (!digit(prefix_len_str[2]) || !digit(prefix_len_str[1]) || !digit(prefix_len_str[0])) {
         return false;
       }
-      prefix_len = (prefix_len_str[2] - '0') + (10 * (prefix_len_str[1] - '0')) + (100 * (prefix_len_str[0] - '0'));
+      prefix_len = (prefix_len_str[2] - '0') + (10 * (prefix_len_str[1] - '0'))
+          + (100 * (prefix_len_str[0] - '0'));
       break;
     case 2:
       if (!digit(prefix_len_str[1]) || !digit(prefix_len_str[0])) {
@@ -756,7 +739,6 @@ specialize_hspec(
 void
 update_eof(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered update_eof\n");
   if (state->pos >= state->len) {
     state->eof = true;
   }
@@ -788,13 +770,11 @@ validate(
 bool
 validate_file(
   const char* path) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered validate\n");
   parser_state_t state;
   init_state(&state);
   if (!init_file(path, &state)) {
     return false;
   }
-  pam_access_osx_syslog(LOG_DEBUG, "Beginning validation of configuration file: '%s'\n", path);
   bool valid = validate(&state);
   clean_state(&state);
   return valid;
@@ -803,7 +783,6 @@ validate_file(
 bool
 validate_line(
   parser_state_t* state) {
-  pam_access_osx_syslog(LOG_DEBUG, "Entered validate_line\n");
   skip_whitespace(state);
   // Action
   if (!expect_action(state)) {
