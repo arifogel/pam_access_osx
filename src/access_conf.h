@@ -43,9 +43,26 @@ typedef struct access_conf_entry {
   access_conf_user_specifier_t uspec;
 } access_conf_entry_t;
 
+access_conf_entry_t*
+access_conf_entry_match(
+  access_conf_entry_t* entry,
+  const char* ug_str,
+  const host_info_t hinfo);
+
+bool
+access_conf_permit(
+  access_conf_entry_t* entry,
+  const char* ug_str,
+  const host_info_t hinfo);
+
+access_conf_host_specifier_t*
+entry_hspec_match(
+  access_conf_host_specifier_t* hspec,
+  const host_info_t hinfo);
+
 bool
 entry_match(
-  const access_conf_entry_t* entry,
+  access_conf_entry_t* entry,
   const char* ug_str,
   const host_info_t hinfo);
 
