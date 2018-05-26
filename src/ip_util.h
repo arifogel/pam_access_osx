@@ -23,9 +23,9 @@ typedef union ip_network {
   ipv6_network_t net6;
 } ip_network_t;
 
-ipv4_addr_t __ip(const char* addr_str);
-
-ipv6_addr_t __ip6(const char* addr_str);
+ipv6_addr_t
+__ip6(
+  const char* addr_str);
 
 bool
 ipv4_network_contains(

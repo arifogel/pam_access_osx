@@ -20,6 +20,7 @@ pam_access_osx_la_SOURCES = $(MODULE_SRC)
 ### Tests
 TEST_NAMES = \
 	test_access_exports \
+	test_access_conf \
 	test_access_conf_parser_validate_invalid \
 	test_access_conf_parser_validate_valid \
 	test_access_conf_parser_parse \
@@ -42,6 +43,11 @@ test_access_exports_SOURCES = tests/test_access_exports.c
 #test_access_<CHANGEME>_CPPFLAGS = -I$(top_srcdir)/src
 #test_access_<CHANGEME>_LDADD = $(TEST_LDFLAGS)
 #test_access_<CHANGEME>_SOURCES = tests/test_access_<CHANGEME>.c $(MODULE_SRC)
+
+test_access_conf_CFLAGS = $(TEST_CFLAGS)
+test_access_conf_CPPFLAGS = -I$(top_srcdir)/src
+test_access_conf_LDADD = $(TEST_LDFLAGS)
+test_access_conf_SOURCES = tests/test_access_conf.c $(MODULE_SRC)
 
 test_access_conf_parser_parse_CFLAGS = $(TEST_CFLAGS)
 test_access_conf_parser_parse_CPPFLAGS = -I$(top_srcdir)/src

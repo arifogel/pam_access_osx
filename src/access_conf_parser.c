@@ -54,7 +54,7 @@ destroy_entry(
   if (entry != NULL) {
     destroy_entry(entry->next);
     destroy_hspec(entry->hspec);
-    destroy_uspec(entry->uspec);
+    destroy_uspec(entry->uspec.ug);
     free(entry);
     pam_exec_osx_allocated_entry_count--;
   }
@@ -448,15 +448,15 @@ parse_user(
     next_char(state);
   }
   const off_t size = &state->buf[+state->pos] - start + 1; // +'\0'
-  char* uspec = calloc(size, sizeof(char));
-  if (uspec == NULL) {
+  char* ug_str = calloc(size, sizeof(char));
+  if (ug_str == NULL) {
     parse_error(state, "Could not allocate memory for uspec: %s", strerror(errno));
     return false;
   }
   pam_exec_osx_allocated_uspec_count++;
-  strncpy(uspec, start, size - 1);
-  uspec[size - 1] = '\0';
-  entry->uspec = uspec;
+  strncpy(ug_str, start, size - 1);
+  ug_str[size - 1] = '\0';
+  entry->uspec.ug = ug_str;
   return true;
 }
 
@@ -550,7 +550,7 @@ sp_ipv4_address(
   }
   hspec->network.net4.address = addr;
   hspec->network.net4.length = 32;
-  hspec->type = HST_IPV4_ADDRESS;
+  hspec->type = HST_IPV4_NETWORK;
   pam_exec_osx_hspec_ipv4_address_count++;
   return true;
 }
@@ -633,7 +633,7 @@ sp_ipv6_address(
   }
   hspec->network.net6.address = addr6;
   hspec->network.net6.length = 128;
-  hspec->type = HST_IPV6_ADDRESS;
+  hspec->type = HST_IPV6_NETWORK;
   pam_exec_osx_hspec_ipv6_address_count++;
   return true;
 }

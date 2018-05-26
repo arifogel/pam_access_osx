@@ -54,6 +54,7 @@ pam_access_osx_config.h
 
 # tests
 test_access_exports
+test_access_conf
 test_access_conf_parser_validate_invalid
 test_access_conf_parser_validate_valid
 test_access_conf_parser_parse
