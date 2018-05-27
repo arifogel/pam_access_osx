@@ -88,19 +88,6 @@ digit(
 }
 
 bool
-expect_action(
-  parser_state_t* state) {
-  if (!next_char(state)) {
-    return false;
-  }
-  if (!(state->last == '+' || state->last == '-')) {
-    parse_error(state, "Expected '+' or '-'\n");
-    return false;
-  }
-  return true;
-}
-
-bool
 expect_colon(
   parser_state_t* state) {
   if (!next_char(state)) {
@@ -111,38 +98,6 @@ expect_colon(
     return false;
   }
   return true;;
-}
-
-bool
-expect_host_specifier(
-  parser_state_t* state) {
-  if (!next_char(state)) {
-    return false;
-  }
-  if (!host_char(state->last)) {
-    parse_error(state, "Expected host-specifier\n");
-    return false;
-  }
-  while (!state->eof && host_char(peek_char(state))) {
-    next_char(state);
-  }
-  return true;
-}
-
-bool
-expect_user(
-  parser_state_t* state) {
-  if (!next_char(state)) {
-    return false;
-  }
-  if (!user_char(state->last)) {
-    parse_error(state, "Expected user\n");
-    return false;
-  }
-  while (!state->eof && user_char(peek_char(state))) {
-    next_char(state);
-  }
-  return true;
 }
 
 bool
@@ -206,12 +161,6 @@ init_state(
   state->path = NULL;
   state->pos = 0;
   state->start = NULL;
-}
-
-bool
-lower(
-  char ch) {
-  return 'a' <= ch && ch <= 'z';
 }
 
 bool
@@ -468,17 +417,6 @@ skip_comment(
       // Skip non-newline
       next_char(state);
     }
-  }
-  return consumed;
-}
-
-bool
-skip_host_specifier(
-  parser_state_t* state) {
-  bool consumed = false;
-  while (!state->eof && host_char(peek_char(state))) {
-    next_char(state);
-    consumed = true;
   }
   return consumed;
 }
@@ -745,82 +683,9 @@ update_eof(
 }
 
 bool
-upper(
-  char ch) {
-  return 'A' <= ch && ch <= 'Z';
-}
-
-bool
 user_char(
   char ch) {
   return ch != '\0' && ch != '\n' && ch != ':' && ch != '#' && ch != ' ' && ch != '\t';
-}
-
-bool
-validate(
-  parser_state_t* state) {
-  while (skip_comment(state) || skip_newline(state) || skip_whitespace(state)) {
-  }
-  while (!state->eof && !state->err) {
-    validate_line(state);
-  }
-  return !state->err;
-}
-
-bool
-validate_file(
-  const char* path) {
-  parser_state_t state;
-  init_state(&state);
-  if (!init_file(path, &state)) {
-    return false;
-  }
-  bool valid = validate(&state);
-  clean_state(&state);
-  return valid;
-}
-
-bool
-validate_line(
-  parser_state_t* state) {
-  skip_whitespace(state);
-  // Action
-  if (!expect_action(state)) {
-    return false;
-  }
-  skip_whitespace(state);
-  // :
-  if (!expect_colon(state)) {
-    return false;
-  }
-  skip_whitespace(state);
-  // User
-  if (!expect_user(state)) {
-    return false;
-  }
-  skip_whitespace(state);
-  // :
-  if (!expect_colon(state)) {
-    return false;
-  }
-  skip_whitespace(state);
-  // HS1
-  if (!expect_host_specifier(state)) {
-    return false;
-  }
-  // HS2-
-  while (skip_whitespace(state) || skip_host_specifier(state)) {
-  }
-  // #.*\n
-  while (skip_comment(state) || skip_newline(state) || skip_whitespace(state)) {
-  }
-  return true;
-}
-
-bool
-word_char(
-  char ch) {
-  return ch != '\n' && ch != ' ' && ch != '\t' && ch != '#';
 }
 
 bool

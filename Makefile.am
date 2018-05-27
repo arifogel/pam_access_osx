@@ -21,8 +21,7 @@ pam_access_osx_la_SOURCES = $(MODULE_SRC)
 TEST_NAMES = \
 	test_access_exports \
 	test_access_conf \
-	test_access_conf_parser_validate_invalid \
-	test_access_conf_parser_validate_valid \
+	test_access_conf_parser_failure \
 	test_access_conf_parser_parse \
 	test_ip_network \
 	test_end_to_end
@@ -55,15 +54,10 @@ test_access_conf_parser_parse_CPPFLAGS = -I$(top_srcdir)/src
 test_access_conf_parser_parse_LDADD = $(TEST_LDFLAGS)
 test_access_conf_parser_parse_SOURCES = tests/test_access_conf_parser_parse.c $(MODULE_SRC)
 
-test_access_conf_parser_validate_invalid_CFLAGS = $(TEST_CFLAGS)
-test_access_conf_parser_validate_invalid_CPPFLAGS = -I$(top_srcdir)/src
-test_access_conf_parser_validate_invalid_LDADD = $(TEST_LDFLAGS)
-test_access_conf_parser_validate_invalid_SOURCES = tests/test_access_conf_parser_validate_invalid.c $(MODULE_SRC)
-
-test_access_conf_parser_validate_valid_CFLAGS = $(TEST_CFLAGS)
-test_access_conf_parser_validate_valid_CPPFLAGS = -I$(top_srcdir)/src
-test_access_conf_parser_validate_valid_LDADD = $(TEST_LDFLAGS)
-test_access_conf_parser_validate_valid_SOURCES = tests/test_access_conf_parser_validate_valid.c $(MODULE_SRC)
+test_access_conf_parser_failure_CFLAGS = $(TEST_CFLAGS)
+test_access_conf_parser_failure_CPPFLAGS = -I$(top_srcdir)/src
+test_access_conf_parser_failure_LDADD = $(TEST_LDFLAGS)
+test_access_conf_parser_failure_SOURCES = tests/test_access_conf_parser_failure.c $(MODULE_SRC)
 
 test_ip_network_CFLAGS = $(TEST_CFLAGS)
 test_ip_network_CPPFLAGS = -I$(top_srcdir)/src

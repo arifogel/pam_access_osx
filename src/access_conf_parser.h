@@ -8,9 +8,6 @@
 #define ADDR_STR_MAX_LEN (16)
 #define ADDR6_STR_MAX_LEN (48)
 
-#define PARSER_ERROR (-1)
-#define PARSER_SUCCESS (0)
-
 extern size_t pam_exec_osx_allocated_entry_count;
 
 extern size_t pam_exec_osx_allocated_hostname_count;
@@ -61,45 +58,12 @@ destroy_uspec(
   char* uspec);
 
 /**
- * Consume an action, represented as either '+' or '-' (unquoted).
- * Sets state->err if at EOF or error occurs.
- * Returns true iff successful.
- */
-bool
-expect_action(
-  parser_state_t* state);
-
-/**
  * Consume a colon (':') character.
  * Sets state->err if at EOF or error occurs.
  * Returns true iff successful.
  */
 bool
 expect_colon(
-  parser_state_t* state);
-
-/**
- * Consume a host specifier:
- * - IPv4 address
- * - IPv4 network
- * - IPv6 address
- * - IPv6 network
- * - hostname
- *
- * Sets state->err if at EOF or error occurs.
- * Returns true iff successful.
- */
-bool
-expect_host_specifier(
-  parser_state_t* state);
-
-/**
- * Consume a username.
- * Sets state->err if at EOF or error occurs.
- * Returns true iff successful.
- */
-bool
-expect_user(
   parser_state_t* state);
 
 /**
@@ -134,6 +98,11 @@ access_conf_entry_t*
 parse(
   parser_state_t* state);
 
+/**
+ * Consume an action, represented as either '+' or '-' (unquoted).
+ * Sets state->err if at EOF or error occurs.
+ * Returns true iff successful.
+ */
 bool
 parse_action(
   parser_state_t* state,
@@ -152,6 +121,17 @@ access_conf_entry_t*
 parse_file(
   const char* path);
 
+/**
+ * Consume a host specifier:
+ * - IPv4 address
+ * - IPv4 network
+ * - IPv6 address
+ * - IPv6 network
+ * - hostname
+ *
+ * Sets state->err if at EOF or error occurs.
+ * Returns true iff successful.
+ */
 bool
 parse_host_specifier(
   parser_state_t* state,
@@ -162,6 +142,11 @@ bool
 parse_line(
   parser_state_t* state);
 
+/**
+ * Consume a username.
+ * Sets state->err if at EOF or error occurs.
+ * Returns true iff successful.
+ */
 bool
 parse_user(
   parser_state_t* state,
@@ -181,21 +166,6 @@ peek_char(
  */
 bool
 skip_comment(
-  parser_state_t* state);
-
-/**
- * Consume a host specifier if available:
- * - IPv4 address
- * - IPv4 network
- * - IPv6 address
- * - IPv6 network
- * - hostname
- *
- * Sets state->err if at EOF or error occurs.
- * Returns true iff host specifier consumed.
- */
-bool
-skip_host_specifier(
   parser_state_t* state);
 
 /**
@@ -263,30 +233,6 @@ update_eof(
 bool
 user_char(
   char ch);
-
-/**
- * Validate the format of the access.conf represented as state..
- * Returns true iff successful.
- */
-bool
-validate(
-  parser_state_t* state);
-
-/**
- * Validate the format of the access.conf file located at supplied path.
- * Returns true iff successful.
- */
-bool
-validate_file(
-  const char* path);
-
-/**
- * Validate the format of the next line in the access.conf file
- * Returns true iff successful.
- */
-bool
-validate_line(
-  parser_state_t* state);
 
 /**
  * Returns true iff ch is a whitespace character (' ' or '\t')
