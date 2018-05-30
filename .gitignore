@@ -60,6 +60,9 @@ test_access_conf_parser_parse
 test_end_to_end
 test_ip_network
 
+# pamdoc generated manpages
+*.[0-9]
+
 *.la
 *.lo
 *.o
