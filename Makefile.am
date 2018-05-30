@@ -5,6 +5,10 @@ ACLOCAL_AMFLAGS=-I m4
 
 pam_access_osxdir = $(libdir)/security
 
+PAM_ACCESS_OSX_DOC = man/pam_access_osx.8 man/access.conf.5
+
+dist_man_MANS = $(PAM_ACCESS_OSX_DOC)
+
 pam_access_osx_LTLIBRARIES = pam_access_osx.la
 
 MODULE_SRC = \
@@ -68,3 +72,14 @@ test_end_to_end_CFLAGS = $(TEST_CFLAGS)
 test_end_to_end_CPPFLAGS = -I$(top_srcdir)/src
 test_end_to_end_LDADD = $(TEST_LDFLAGS)
 test_end_to_end_SOURCES = tests/test_end_to_end.c $(MODULE_SRC)
+
+.PHONY: doc
+
+doc: $(PAM_ACCESS_OSX_DOC)
+
+man/pam_access_osx.8: man/pam_access_osx.8.md
+	pandoc --standalone --to man man/pam_access_osx.8.md > man/pam_access_osx.8
+
+man/access.conf.5: man/access.conf.5.md
+	pandoc --standalone --to man man/access.conf.5.md > man/access.conf.5
+
