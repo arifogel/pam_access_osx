@@ -20,10 +20,10 @@ main(
   assert(first_entry != NULL);
 
   // Should have allocated corresponding # of entry, hostname, hspec, uspec
-  assert(pam_exec_osx_allocated_entry_count == 8);
-  assert(pam_exec_osx_allocated_hostname_count == 11);
-  assert(pam_exec_osx_allocated_hspec_count == 11);
-  assert(pam_exec_osx_allocated_uspec_count == 8);
+  assert(pam_exec_osx_allocated_entry_count == 9);
+  assert(pam_exec_osx_allocated_hostname_count == 12);
+  assert(pam_exec_osx_allocated_hspec_count == 12);
+  assert(pam_exec_osx_allocated_uspec_count == 9);
 
   // Should have corresponding counts for hspec types
   assert(pam_exec_osx_hspec_all_count == 1);
@@ -31,7 +31,7 @@ main(
   assert(pam_exec_osx_hspec_ipv4_network_count == 3);
   assert(pam_exec_osx_hspec_ipv6_address_count == 1);
   assert(pam_exec_osx_hspec_ipv6_network_count == 3);
-  assert(pam_exec_osx_hspec_hostname_count == 1);
+  assert(pam_exec_osx_hspec_hostname_count == 2);
 
   // alice
   access_conf_entry_t* cur_entry = first_entry;
@@ -125,6 +125,17 @@ main(
   assert(!strcmp(cur_entry->uspec.ug, "fatima"));
   assert(cur_entry->hspec->type = HST_HOSTNAME);
   assert(!strcmp(cur_entry->hspec->hostname, "example.com"));
+  assert(!cur_entry->hspec->next);
+  assert(cur_entry->next);
+
+  // @everyone
+  cur_entry = cur_entry->next;
+  assert(cur_entry->permit);
+  assert(!cur_entry->uspec.all);
+  assert(cur_entry->uspec.group);
+  assert(!strcmp(cur_entry->uspec.ug, "@everyone"));
+  assert(cur_entry->hspec->type = HST_HOSTNAME);
+  assert(!strcmp(cur_entry->hspec->hostname, "nowhere"));
   assert(!cur_entry->hspec->next);
   assert(cur_entry->next);
 

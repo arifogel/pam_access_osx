@@ -380,6 +380,17 @@ parse_user(
     parse_error(state, "Expected user\n");
     return false;
   }
+  bool group = state->last == '@';
+  // must be at least 2 characters if group
+  if (group) {
+    if (!next_char(state)) {
+      return false;
+    }
+    if (!user_char(state->last)) {
+      parse_error(state, "Expected group\n");
+      return false;
+    }
+  }
   while (!state->eof && user_char(peek_char(state))) {
     next_char(state);
   }
@@ -396,6 +407,7 @@ parse_user(
   if (!strcmp(ug_str, "ALL")) {
     entry->uspec.all = true;
   }
+  entry->uspec.group = group;
   return true;
 }
 

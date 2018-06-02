@@ -5,6 +5,7 @@
 #include <ip_util.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <uuid/uuid.h>
 
 typedef enum host_specifier_type {
   HST_ALL = 1,
@@ -31,6 +32,12 @@ typedef struct access_conf_host_specifier {
   host_specifier_type_t type;
 } access_conf_host_specifier_t;
 
+typedef struct access_conf_user_info {
+  const char* username;
+  uid_t uid;
+  uuid_t uuid;
+} access_conf_user_info_t;
+
 typedef struct access_conf_user_specifier {
   bool all;
   bool group;
@@ -47,13 +54,19 @@ typedef struct access_conf_entry {
 access_conf_entry_t*
 access_conf_entry_match(
   access_conf_entry_t* entry,
-  const char* ug_str,
+  access_conf_user_info_t uinfo,
   const host_info_t hinfo);
 
 bool
 access_conf_permit(
   access_conf_entry_t* entry,
-  const char* ug_str,
+  const char* username,
+  const host_info_t hinfo);
+
+bool
+access_conf_permit_uinfo(
+  access_conf_entry_t* entry,
+  access_conf_user_info_t uinfo,
   const host_info_t hinfo);
 
 access_conf_host_specifier_t*
@@ -64,7 +77,7 @@ entry_hspec_match(
 bool
 entry_match(
   access_conf_entry_t* entry,
-  const char* ug_str,
+  access_conf_user_info_t uinfo,
   const host_info_t hinfo);
 
 host_info_t
@@ -77,9 +90,14 @@ hspec_match(
   const host_info_t hinfo);
 
 bool
+init_uinfo(
+  access_conf_user_info_t* uinfo,
+  const char* username);
+
+bool
 uspec_match(
   access_conf_user_specifier_t uspec,
-  const char* ug_str);
+  access_conf_user_info_t uinfo);
 
 #endif /* __ACCESS_CONF_ENTRY_H__ */
 

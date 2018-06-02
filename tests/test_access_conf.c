@@ -1,7 +1,43 @@
 #include <assert.h>
+#include <grp.h>
+#include <membership.h>
+#include <pwd.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <uuid/uuid.h>
 
 #include "access_conf.h"
+
+static
+void
+get_test_user_and_group(
+  char** username,
+  char** groupname) {
+  long bufsize;
+  char* buffer;
+
+  assert((bufsize = sysconf(_SC_GETPW_R_SIZE_MAX)) != -1);
+  assert((buffer = calloc(bufsize,1)) != NULL);
+  struct passwd pwd;
+  struct passwd* u_result;
+  assert(!getpwuid_r(getuid(), &pwd, buffer, bufsize, &u_result));
+  assert((*username = calloc(bufsize,1)) != NULL);
+  strcpy(*username, pwd.pw_name);
+  free(buffer);
+
+  struct group grp;
+  struct group* g_result;
+  assert((bufsize = sysconf(_SC_GETGR_R_SIZE_MAX)) != -1);
+  assert((buffer = calloc(bufsize,1)) != NULL);
+  assert(!getgrgid_r(getgid(), &grp, buffer, bufsize, &g_result));
+  assert((*groupname = calloc(bufsize+1,1)) != NULL); // extra byte for '@'
+  char* gn = *groupname;
+  strcpy(gn + 1, grp.gr_name);
+  gn[0] = '@';
+  free(buffer);
+}
 
 int
 main(
@@ -9,13 +45,24 @@ main(
   // user specifier - user
   access_conf_user_specifier_t uspec1 = { .group = false, .ug = "user1" };
 
-  assert(uspec_match(uspec1, "user1"));
-  assert(!uspec_match(uspec1, "user2"));
+  access_conf_user_info_t uinfo_user1 = { .username = "user1" };
+  assert(uspec_match(uspec1, uinfo_user1));
+  access_conf_user_info_t uinfo_user2 = { .username = "user2" };
+  assert(!uspec_match(uspec1, uinfo_user2));
+
+  // user specifier - group
+  char* username;
+  char* groupname;
+  get_test_user_and_group(&username, &groupname);
+  access_conf_user_specifier_t uspec_group = { .group = true, .ug = groupname };
+  access_conf_user_info_t uinfo_group;
+  assert(init_uinfo(&uinfo_group, username));
+  assert(uspec_match(uspec_group, uinfo_group));
 
   // user specifier - ALL
   access_conf_user_specifier_t uspec_all = { .group = false, .all = true };
-
-  assert(uspec_match(uspec_all, "user3"));
+  access_conf_user_info_t uinfo_all = { .username = "user3" };
+  assert(uspec_match(uspec_all, uinfo_all));
 
   // host specifier - hostname
   access_conf_host_specifier_t hspec_hostname = { .hostname = "example.com", .type = HST_HOSTNAME };
@@ -72,9 +119,9 @@ main(
   access_conf_entry_t entry_single_hspec = { .hspec = &single_hspec, .permit = true, .uspec = {
       .ug = "user1", .group = false } };
 
-  assert(entry_match(&entry_single_hspec, "user1", get_hinfo("example.com")));
-  assert(!entry_match(&entry_single_hspec, "user2", get_hinfo("example.com")));
-  assert(!entry_match(&entry_single_hspec, "user1", get_hinfo("foo")));
+  assert(entry_match(&entry_single_hspec, uinfo_user1, get_hinfo("example.com")));
+  assert(!entry_match(&entry_single_hspec, uinfo_user2, get_hinfo("example.com")));
+  assert(!entry_match(&entry_single_hspec, uinfo_user1, get_hinfo("foo")));
 
   // entry - dual hspec
   access_conf_host_specifier_t dual_hspec_second =
@@ -85,9 +132,9 @@ main(
   access_conf_entry_t entry_dual_hspec = { .hspec = &dual_hspec_first, .permit = true, .uspec = {
       .ug = "user1", .group = false } };
 
-  assert(entry_match(&entry_dual_hspec, "user1", get_hinfo("example.com")));
-  assert(entry_match(&entry_dual_hspec, "user1", get_hinfo("example.org")));
-  assert(!entry_match(&entry_dual_hspec, "user2", get_hinfo("example.net")));
+  assert(entry_match(&entry_dual_hspec, uinfo_user1, get_hinfo("example.com")));
+  assert(entry_match(&entry_dual_hspec, uinfo_user1, get_hinfo("example.org")));
+  assert(!entry_match(&entry_dual_hspec, uinfo_user2, get_hinfo("example.net")));
 
   // dual entry
   access_conf_host_specifier_t dual_entry_hspec_second = { .hostname = "example.sh", .type =
@@ -99,23 +146,30 @@ main(
   access_conf_entry_t dual_entry_first = { .hspec = &dual_entry_hspec_first, .permit = true,
       .uspec = { .ug = "user1", .group = false }, .next = &dual_entry_second };
 
-  assert(access_conf_entry_match(&dual_entry_first, "user1", get_hinfo("example.biz")));
-  assert(access_conf_entry_match(&dual_entry_first, "user1", get_hinfo("example.sh")));
-  assert(!access_conf_entry_match(&dual_entry_first, "user1", get_hinfo("example.dev")));
+  assert(access_conf_entry_match(&dual_entry_first, uinfo_user1, get_hinfo("example.biz")));
+  assert(access_conf_entry_match(&dual_entry_first, uinfo_user1, get_hinfo("example.sh")));
+  assert(!access_conf_entry_match(&dual_entry_first, uinfo_user1, get_hinfo("example.dev")));
 
-  access_conf_host_specifier_t entry_action_hspec_permit = { .hostname = "example.co.uk", .type = HST_HOSTNAME };
-  access_conf_host_specifier_t entry_action_hspec_deny = { .hostname = "example.ca", .type = HST_HOSTNAME };
-  access_conf_entry_t entry_action_deny = { .hspec = &entry_action_hspec_deny, .permit = false, .uspec = {
-      .ug = "user1", .group = false } };
-  access_conf_entry_t entry_action_permit = { .hspec = &entry_action_hspec_permit, .permit = true, .uspec = {
-      .ug = "user1", .group = false }, .next = &entry_action_deny };
+  access_conf_host_specifier_t entry_action_hspec_permit = { .hostname = "example.co.uk", .type =
+      HST_HOSTNAME };
+  access_conf_host_specifier_t entry_action_hspec_deny = { .hostname = "example.ca", .type =
+      HST_HOSTNAME };
+  access_conf_entry_t entry_action_deny = { .hspec = &entry_action_hspec_deny, .permit = false,
+      .uspec = { .ug = "user1", .group = false } };
+  access_conf_entry_t entry_action_permit = { .hspec = &entry_action_hspec_permit, .permit = true,
+      .uspec = { .ug = "user1", .group = false }, .next = &entry_action_deny };
 
-  assert(access_conf_entry_match(&entry_action_permit, "user1", get_hinfo("example.co.uk")) == &entry_action_permit);
-  assert(access_conf_permit(&entry_action_permit, "user1", get_hinfo("example.co.uk")));
-  assert(access_conf_entry_match(&entry_action_permit, "user1", get_hinfo("example.ca")) == &entry_action_deny);
-  assert(!access_conf_permit(&entry_action_permit, "user1", get_hinfo("example.ca")));
-  assert(access_conf_entry_match(&entry_action_permit, "user1", get_hinfo("example.foo")) == NULL);
-  assert(access_conf_permit(&entry_action_permit, "user1", get_hinfo("example.foo")));
+  assert(
+    access_conf_entry_match(&entry_action_permit, uinfo_user1, get_hinfo("example.co.uk"))
+        == &entry_action_permit);
+  assert(access_conf_permit_uinfo(&entry_action_permit, uinfo_user1, get_hinfo("example.co.uk")));
+  assert(
+    access_conf_entry_match(&entry_action_permit, uinfo_user1, get_hinfo("example.ca"))
+        == &entry_action_deny);
+  assert(!access_conf_permit_uinfo(&entry_action_permit, uinfo_user1, get_hinfo("example.ca")));
+  assert(
+    access_conf_entry_match(&entry_action_permit, uinfo_user1, get_hinfo("example.foo")) == NULL);
+  assert(access_conf_permit_uinfo(&entry_action_permit, uinfo_user1, get_hinfo("example.foo")));
 
   return 0;
 }
